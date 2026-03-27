@@ -85,7 +85,6 @@ export function RegisterPaymentModal({ installment, open, onClose }: RegisterPay
   // Reset form when modal opens with updated defaults
   useEffect(() => {
     if (open) {
-      setServerError(null);
       reset({
         amount: totalDue,
         paymentMethod: PaymentMethod.BankTransfer,

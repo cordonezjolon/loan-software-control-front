@@ -1,37 +1,29 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/stores/authStore';
 import { PageLoader } from '@/components/shared/LoadingSpinner';
 
 export function AuthGuard({ children }: { children: React.ReactNode }) {
   const token = useAuthStore((state) => state.token);
+  const hydrated = useAuthStore((state) => state._hydrated);
   const router = useRouter();
-  const [checked, setChecked] = useState(false);
 
   useEffect(() => {
-    // Read directly from localStorage — always synchronous, no race with Zustand hydration.
-    // 'access_token' is set by setAuth alongside the Zustand persisted state.
+    if (!hydrated) return;
+
     const localToken = localStorage.getItem('access_token');
-    if (!localToken || localToken === 'undefined') {
+    if (!token && (!localToken || localToken === 'undefined')) {
       void router.replace('/login');
-    } else {
-      setChecked(true);
     }
-  }, [router]);
+  }, [hydrated, token, router]);
 
-  // React to Zustand logout (token cleared) after the initial check
-  useEffect(() => {
-    if (checked && !token) {
-      const localToken = localStorage.getItem('access_token');
-      if (!localToken || localToken === 'undefined') {
-        void router.replace('/login');
-      }
-    }
-  }, [checked, token, router]);
+  if (!hydrated) {
+    return <PageLoader />;
+  }
 
-  if (!checked) {
+  if (!token) {
     return <PageLoader />;
   }
 

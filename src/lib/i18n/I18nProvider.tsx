@@ -1,21 +1,27 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
-import { DEFAULT_LOCALE, messages, type Locale, SUPPORTED_LOCALES } from './messages';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { NextIntlClientProvider, useTranslations } from 'next-intl';
+import { DEFAULT_LOCALE, messages as messageCatalog, type Locale } from './messages';
+import { LOCALE_COOKIE_KEY, LOCALE_STORAGE_KEY, isSupportedLocale } from './locale';
+import type { TranslateFn, TranslationValues } from './types';
 
 interface I18nContextValue {
   locale: Locale;
   setLocale: (locale: Locale) => void;
-  t: (key: string) => string;
+  t: TranslateFn;
 }
 
 const I18nContext = createContext<I18nContextValue | undefined>(undefined);
 
-const STORAGE_KEY = 'app_locale';
+interface I18nProviderProps {
+  children: React.ReactNode;
+  initialLocale: Locale;
+}
 
 function getMessage(locale: Locale, key: string): string {
   const segments = key.split('.');
-  let current: unknown = messages[locale];
+  let current: unknown = messageCatalog[locale];
 
   for (const segment of segments) {
     if (typeof current !== 'object' || current === null || !(segment in current)) {
@@ -27,50 +33,82 @@ function getMessage(locale: Locale, key: string): string {
   return typeof current === 'string' ? current : key;
 }
 
-function detectInitialLocale(): Locale {
-  if (typeof window === 'undefined') return DEFAULT_LOCALE;
+function I18nContextBridge({
+  children,
+  locale,
+  setLocale,
+}: {
+  children: React.ReactNode;
+  locale: Locale;
+  setLocale: (locale: Locale) => void;
+}) {
+  const translate = useTranslations();
 
-  const saved = localStorage.getItem(STORAGE_KEY);
-  if (saved && SUPPORTED_LOCALES.includes(saved as Locale)) {
-    return saved as Locale;
-  }
-
-  const browserLang = window.navigator.language.toLowerCase();
-  if (browserLang.startsWith('es')) return 'es';
-
-  return DEFAULT_LOCALE;
-}
-
-export function I18nProvider({ children }: { children: React.ReactNode }) {
-  const [locale, setLocaleState] = useState<Locale>(DEFAULT_LOCALE);
-
-  useEffect(() => {
-    setLocaleState(detectInitialLocale());
-  }, []);
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem(STORAGE_KEY, locale);
-    }
-    if (typeof document !== 'undefined') {
-      document.documentElement.lang = locale;
-    }
-  }, [locale]);
+  const t = useCallback<TranslateFn>(
+    (key: string, values?: TranslationValues): string => {
+      try {
+        return translate(key as never, values as never);
+      } catch {
+        const fallback = getMessage(DEFAULT_LOCALE, key);
+        return fallback === key ? key : fallback;
+      }
+    },
+    [translate],
+  );
 
   const value = useMemo<I18nContextValue>(
     () => ({
       locale,
-      setLocale: (nextLocale: Locale) => setLocaleState(nextLocale),
-      t: (key: string) => {
-        const translated = getMessage(locale, key);
-        if (translated !== key) return translated;
-        return getMessage(DEFAULT_LOCALE, key);
-      },
+      setLocale,
+      t,
     }),
-    [locale],
+    [locale, setLocale, t],
   );
 
   return <I18nContext.Provider value={value}>{children}</I18nContext.Provider>;
+}
+
+export function I18nProvider({ children, initialLocale }: I18nProviderProps) {
+  const [locale, setLocaleState] = useState<Locale>(initialLocale);
+
+  useEffect(() => {
+    setLocaleState(initialLocale);
+  }, [initialLocale]);
+
+  const setLocale = useCallback((nextLocale: Locale) => {
+    setLocaleState(nextLocale);
+
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(LOCALE_STORAGE_KEY, nextLocale);
+      document.cookie = `${LOCALE_COOKIE_KEY}=${nextLocale}; path=/; max-age=31536000; samesite=lax`;
+    }
+
+    if (typeof document !== 'undefined') {
+      document.documentElement.lang = nextLocale;
+    }
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const saved = localStorage.getItem(LOCALE_STORAGE_KEY);
+    if (isSupportedLocale(saved) && saved !== locale) {
+      setLocaleState(saved);
+      return;
+    }
+
+    localStorage.setItem(LOCALE_STORAGE_KEY, locale);
+    document.cookie = `${LOCALE_COOKIE_KEY}=${locale}; path=/; max-age=31536000; samesite=lax`;
+    document.documentElement.lang = locale;
+  }, [locale]);
+
+  return (
+    <NextIntlClientProvider locale={locale} messages={messageCatalog[locale]}>
+      <I18nContextBridge locale={locale} setLocale={setLocale}>
+        {children}
+      </I18nContextBridge>
+    </NextIntlClientProvider>
+  );
 }
 
 export function useI18n() {

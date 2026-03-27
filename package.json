@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "i18n:check": "tsc --pretty false --module commonjs --target es2020 --esModuleInterop --skipLibCheck --outDir .tmp-i18n scripts/validate-i18n.ts src/lib/i18n/messages.ts && node .tmp-i18n/scripts/validate-i18n.js && rm -rf .tmp-i18n",
+    "lint": "npm run i18n:check && eslint"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
@@ -27,6 +28,7 @@
     "date-fns": "^4.1.0",
     "lucide-react": "^0.577.0",
     "next": "16.1.6",
+    "next-intl": "^4.8.3",
     "next-themes": "^0.4.6",
     "react": "19.2.3",
     "react-dom": "19.2.3",

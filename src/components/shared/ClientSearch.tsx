@@ -101,7 +101,6 @@ export function ClientSearch({
             className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
             aria-label={t('common.searchClient')}
             aria-autocomplete="list"
-            aria-expanded={showDropdown}
           />
         )}
 
