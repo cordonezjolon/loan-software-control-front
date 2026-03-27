@@ -2,17 +2,23 @@
 
 import React from 'react';
 import { AlertTriangle, RefreshCw } from 'lucide-react';
+import { useI18n } from '@/lib/i18n/I18nProvider';
 
 interface ErrorBoundaryState {
   hasError: boolean;
   error: Error | null;
 }
 
-export class ErrorBoundary extends React.Component<
-  { children: React.ReactNode; fallback?: React.ReactNode },
-  ErrorBoundaryState
-> {
-  constructor(props: { children: React.ReactNode; fallback?: React.ReactNode }) {
+interface InternalErrorBoundaryProps {
+  children: React.ReactNode;
+  fallback?: React.ReactNode;
+  somethingWentWrong: string;
+  unexpectedError: string;
+  tryAgain: string;
+}
+
+class InternalErrorBoundary extends React.Component<InternalErrorBoundaryProps, ErrorBoundaryState> {
+  constructor(props: InternalErrorBoundaryProps) {
     super(props);
     this.state = { hasError: false, error: null };
   }
@@ -28,9 +34,9 @@ export class ErrorBoundary extends React.Component<
         <div className="flex flex-col items-center justify-center gap-3 rounded-lg border border-destructive/30 bg-destructive/5 p-8 text-center">
           <AlertTriangle className="h-8 w-8 text-destructive" />
           <div>
-            <p className="font-medium text-foreground">Something went wrong</p>
+            <p className="font-medium text-foreground">{this.props.somethingWentWrong}</p>
             <p className="mt-1 text-sm text-muted-foreground">
-              {this.state.error?.message ?? 'An unexpected error occurred.'}
+              {this.state.error?.message ?? this.props.unexpectedError}
             </p>
           </div>
           <button
@@ -38,11 +44,26 @@ export class ErrorBoundary extends React.Component<
             className="flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-sm text-primary-foreground hover:bg-primary/90"
           >
             <RefreshCw className="h-3.5 w-3.5" />
-            Try again
+            {this.props.tryAgain}
           </button>
         </div>
       );
     }
     return this.props.children;
   }
+}
+
+export function ErrorBoundary({ children, fallback }: { children: React.ReactNode; fallback?: React.ReactNode }) {
+  const { t } = useI18n();
+
+  return (
+    <InternalErrorBoundary
+      fallback={fallback}
+      somethingWentWrong={t('common.somethingWentWrong')}
+      unexpectedError={t('common.unexpectedError')}
+      tryAgain={t('common.tryAgain')}
+    >
+      {children}
+    </InternalErrorBoundary>
+  );
 }

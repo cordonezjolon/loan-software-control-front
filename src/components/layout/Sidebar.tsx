@@ -18,26 +18,28 @@ import { cn } from '@/lib/utils';
 import { useUiStore } from '@/stores/uiStore';
 import { useNotificationStats } from '@/hooks/useNotifications';
 import { APP_NAME } from '@/lib/constants';
+import { useI18n } from '@/lib/i18n/I18nProvider';
 
 const NAV_ITEMS: Array<{
   href: string;
   icon: React.ForwardRefExoticComponent<React.PropsWithoutRef<React.SVGProps<SVGSVGElement>>>;
-  label: string;
+  labelKey: string;
   badge?: boolean;
 }> = [
-  { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-  { href: '/clients', icon: Users, label: 'Clients' },
-  { href: '/loans', icon: CreditCard, label: 'Loans' },
-  { href: '/installments', icon: Calendar, label: 'Installments' },
-  { href: '/payments', icon: DollarSign, label: 'Payments' },
-  { href: '/calculations', icon: Calculator, label: 'Calculator' },
-  { href: '/notifications', icon: Bell, label: 'Notifications', badge: true },
+  { href: '/dashboard', icon: LayoutDashboard, labelKey: 'nav.dashboard' },
+  { href: '/clients', icon: Users, labelKey: 'nav.clients' },
+  { href: '/loans', icon: CreditCard, labelKey: 'nav.loans' },
+  { href: '/installments', icon: Calendar, labelKey: 'nav.installments' },
+  { href: '/payments', icon: DollarSign, labelKey: 'nav.payments' },
+  { href: '/calculations', icon: Calculator, labelKey: 'nav.calculations' },
+  { href: '/notifications', icon: Bell, labelKey: 'nav.notifications', badge: true },
 ];
 
 export function Sidebar() {
   const pathname = usePathname();
   const { sidebarOpen, toggleSidebar } = useUiStore();
   const { data: notifStats } = useNotificationStats();
+  const { t } = useI18n();
 
   const unreadCount = notifStats?.unread ?? 0;
 
@@ -59,9 +61,10 @@ export function Sidebar() {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto p-2" aria-label="Main navigation">
+      <nav className="flex-1 overflow-y-auto p-2" aria-label={t('common.mainNavigation')}>
         <ul className="space-y-0.5">
-          {NAV_ITEMS.map(({ href, icon: Icon, label, badge }) => {
+          {NAV_ITEMS.map(({ href, icon: Icon, labelKey, badge }) => {
+            const label = t(labelKey);
             const isActive =
               pathname === href || (href !== '/dashboard' && pathname.startsWith(href));
             return (
@@ -106,7 +109,7 @@ export function Sidebar() {
       <div className="border-t border-border p-2">
         <button
           onClick={toggleSidebar}
-          aria-label={sidebarOpen ? 'Collapse sidebar' : 'Expand sidebar'}
+          aria-label={sidebarOpen ? t('common.collapse') : t('common.expand')}
           className={cn(
             'flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm text-muted-foreground hover:bg-accent hover:text-foreground transition-colors',
             !sidebarOpen && 'justify-center px-2',
@@ -115,7 +118,7 @@ export function Sidebar() {
           {sidebarOpen ? (
             <>
               <ChevronLeft className="h-4 w-4 shrink-0" />
-              <span>Collapse</span>
+              <span>{t('common.collapse')}</span>
             </>
           ) : (
             <ChevronRight className="h-4 w-4 shrink-0" />

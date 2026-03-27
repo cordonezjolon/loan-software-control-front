@@ -11,6 +11,7 @@ import { useCreateLoan } from '@/hooks/useLoans';
 import { useEligibleClients } from '@/hooks/useClients';
 import { LoanType, LoanPurpose } from '@/types/loan';
 import { APP_CURRENCY, LOAN_TYPE_LABELS, LOAN_PURPOSE_LABELS } from '@/lib/constants';
+import { useI18n } from '@/lib/i18n/I18nProvider';
 
 const inputCls =
   'h-10 w-full rounded-md border border-input bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring';
@@ -27,6 +28,7 @@ function Field({ label, id, error, children }: { label: string; id: string; erro
 }
 
 export default function NewLoanPage() {
+  const { t } = useI18n();
   const router = useRouter();
   const searchParams = useSearchParams();
   const preselectedClientId = searchParams.get('clientId') ?? '';
@@ -49,7 +51,7 @@ export default function NewLoanPage() {
       const loan = await createLoan.mutateAsync(data);
       router.push(`/loans/${loan.id}`);
     } catch (err) {
-      setServerError(err instanceof Error ? err.message : 'Failed to create loan');
+      setServerError(err instanceof Error ? err.message : t('pages.loansNew.failedToCreate'));
     }
   };
 
@@ -57,12 +59,12 @@ export default function NewLoanPage() {
     <div className="mx-auto max-w-2xl space-y-6">
       <Link href="/loans" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
         <ArrowLeft className="h-4 w-4" />
-        Back to Loans
+        {t('pages.loansNew.backToLoans')}
       </Link>
 
       <div>
-        <h1 className="text-xl font-bold text-foreground">New Loan</h1>
-        <p className="text-sm text-muted-foreground">Create a new loan application</p>
+        <h1 className="text-xl font-bold text-foreground">{t('pages.loansNew.title')}</h1>
+        <p className="text-sm text-muted-foreground">{t('pages.loansNew.subtitle')}</p>
       </div>
 
       <form
@@ -74,9 +76,9 @@ export default function NewLoanPage() {
           <div role="alert" className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">{serverError}</div>
         )}
 
-        <Field label="Client" id="clientId" error={errors.clientId?.message}>
+        <Field label={t('pages.loansNew.client')} id="clientId" error={errors.clientId?.message}>
           <select id="clientId" {...register('clientId')} className={selectCls}>
-            <option value="">Select a client…</option>
+            <option value="">{t('pages.loansNew.selectClient')}</option>
             {eligibleClients.map((c) => (
               <option key={c.id} value={c.id}>
                 {c.firstName} {c.lastName} ({c.email})
@@ -86,17 +88,17 @@ export default function NewLoanPage() {
         </Field>
 
         <div className="grid grid-cols-2 gap-4">
-          <Field label="Loan Type" id="loanType" error={errors.loanType?.message}>
+          <Field label={t('pages.loansNew.loanType')} id="loanType" error={errors.loanType?.message}>
             <select id="loanType" {...register('loanType')} className={selectCls}>
-              <option value="">Select type…</option>
+              <option value="">{t('pages.loansNew.selectType')}</option>
               {Object.entries(LoanType).map(([, v]) => (
                 <option key={v} value={v}>{LOAN_TYPE_LABELS[v]}</option>
               ))}
             </select>
           </Field>
-          <Field label="Loan Purpose" id="loanPurpose" error={errors.loanPurpose?.message}>
+          <Field label={t('pages.loansNew.loanPurpose')} id="loanPurpose" error={errors.loanPurpose?.message}>
             <select id="loanPurpose" {...register('loanPurpose')} className={selectCls}>
-              <option value="">Select purpose…</option>
+              <option value="">{t('pages.loansNew.selectPurpose')}</option>
               {Object.entries(LoanPurpose).map(([, v]) => (
                 <option key={v} value={v}>{LOAN_PURPOSE_LABELS[v]}</option>
               ))}
@@ -105,39 +107,39 @@ export default function NewLoanPage() {
         </div>
 
         <div className="grid grid-cols-2 gap-4">
-          <Field label={`Principal (${APP_CURRENCY})`} id="principal" error={errors.principal?.message}>
+          <Field label={`${t('pages.loansNew.principal')} (${APP_CURRENCY})`} id="principal" error={errors.principal?.message}>
             <input
               id="principal"
               type="number"
               step="0.01"
               {...register('principal', { valueAsNumber: true })}
               className={inputCls}
-              placeholder="50000"
+              placeholder={t('pages.loansNew.principalPlaceholder')}
             />
           </Field>
-          <Field label="Interest Rate (decimal, e.g. 0.05 = 5%)" id="interestRate" error={errors.interestRate?.message}>
+          <Field label={t('pages.loansNew.interestRate')} id="interestRate" error={errors.interestRate?.message}>
             <input
               id="interestRate"
               type="number"
               step="0.001"
               {...register('interestRate', { valueAsNumber: true })}
               className={inputCls}
-              placeholder="0.05"
+              placeholder={t('pages.loansNew.interestRatePlaceholder')}
             />
           </Field>
         </div>
 
         <div className="grid grid-cols-2 gap-4">
-          <Field label="Term (months)" id="termInMonths" error={errors.termInMonths?.message}>
+          <Field label={t('pages.loansNew.termInMonths')} id="termInMonths" error={errors.termInMonths?.message}>
             <input
               id="termInMonths"
               type="number"
               {...register('termInMonths', { valueAsNumber: true })}
               className={inputCls}
-              placeholder="60"
+              placeholder={t('pages.loansNew.termInMonthsPlaceholder')}
             />
           </Field>
-          <Field label="Start Date" id="startDate" error={errors.startDate?.message}>
+          <Field label={t('pages.loansNew.startDate')} id="startDate" error={errors.startDate?.message}>
             <input
               id="startDate"
               type="date"
@@ -149,41 +151,41 @@ export default function NewLoanPage() {
         </div>
 
         <div className="grid grid-cols-2 gap-4">
-          <Field label={`Down Payment (${APP_CURRENCY}, optional)`} id="downPayment" error={errors.downPayment?.message}>
+          <Field label={`${t('pages.loansNew.downPaymentOptional')} (${APP_CURRENCY})`} id="downPayment" error={errors.downPayment?.message}>
             <input
               id="downPayment"
               type="number"
               step="0.01"
               {...register('downPayment', { valueAsNumber: true })}
               className={inputCls}
-              placeholder="0"
+              placeholder={t('pages.loansNew.downPaymentPlaceholder')}
             />
           </Field>
-          <Field label="Risk Adjustment (0–0.10, optional)" id="riskAdjustment" error={errors.riskAdjustment?.message}>
+          <Field label={t('pages.loansNew.riskAdjustmentOptional')} id="riskAdjustment" error={errors.riskAdjustment?.message}>
             <input
               id="riskAdjustment"
               type="number"
               step="0.001"
               {...register('riskAdjustment', { valueAsNumber: true })}
               className={inputCls}
-              placeholder="0"
+              placeholder={t('pages.loansNew.riskAdjustmentPlaceholder')}
             />
           </Field>
         </div>
 
-        <Field label="Notes (optional)" id="notes" error={errors.notes?.message}>
+        <Field label={t('pages.loansNew.notesOptional')} id="notes" error={errors.notes?.message}>
           <textarea
             id="notes"
             {...register('notes')}
             rows={3}
             className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground"
-            placeholder="Optional notes…"
+            placeholder={t('pages.loansNew.notesPlaceholder')}
           />
         </Field>
 
         <div className="flex justify-end gap-3 border-t border-border pt-4">
           <Link href="/loans" className="rounded-md border border-border px-4 py-2 text-sm font-medium hover:bg-accent">
-            Cancel
+            {t('pages.loansNew.cancel')}
           </Link>
           <button
             type="submit"
@@ -191,7 +193,7 @@ export default function NewLoanPage() {
             className="flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/90 disabled:opacity-60"
           >
             {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
-            Create Loan
+            {t('pages.loansNew.createLoan')}
           </button>
         </div>
       </form>

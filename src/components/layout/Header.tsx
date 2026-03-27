@@ -7,11 +7,14 @@ import { useUiStore } from '@/stores/uiStore';
 import { useAuth } from '@/hooks/useAuth';
 import { useNotificationStats } from '@/hooks/useNotifications';
 import { Breadcrumbs } from './Breadcrumbs';
+import { useI18n } from '@/lib/i18n/I18nProvider';
+import { LanguageSwitcher } from './LanguageSwitcher';
 
 export function Header() {
   const { toggleMobileSidebar } = useUiStore();
   const { user, logout } = useAuth();
   const { data: notifStats } = useNotificationStats();
+  const { t } = useI18n();
   const unreadCount = notifStats?.unread ?? 0;
 
   return (
@@ -19,7 +22,7 @@ export function Header() {
       {/* Mobile menu button */}
       <button
         onClick={toggleMobileSidebar}
-        aria-label="Open navigation"
+        aria-label={t('common.openNavigation')}
         className="rounded-md p-1.5 text-muted-foreground hover:bg-accent lg:hidden"
       >
         <Menu className="h-5 w-5" />
@@ -35,7 +38,7 @@ export function Header() {
         {/* Notifications bell */}
         <Link
           href="/notifications"
-          aria-label={`Notifications${unreadCount > 0 ? ` (${unreadCount} unread)` : ''}`}
+          aria-label={`${t('common.notifications')}${unreadCount > 0 ? ` (${unreadCount} ${t('common.unread')})` : ''}`}
           className="relative rounded-md p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
         >
           <Bell className="h-4.5 w-4.5" />
@@ -49,14 +52,16 @@ export function Header() {
           )}
         </Link>
 
+        <LanguageSwitcher />
+
         {/* User menu */}
         <div className="flex items-center gap-2 rounded-md border border-border px-2.5 py-1.5">
           <User className="h-3.5 w-3.5 text-muted-foreground" />
-          <span className="text-xs font-medium text-foreground">{user?.username ?? 'User'}</span>
+          <span className="text-xs font-medium text-foreground">{user?.username ?? t('common.user')}</span>
           <span className="text-xs text-muted-foreground capitalize">({user?.role})</span>
           <button
             onClick={logout}
-            aria-label="Log out"
+            aria-label={t('common.logout')}
             className="ml-1 text-muted-foreground hover:text-foreground transition-colors"
           >
             <LogOut className="h-3.5 w-3.5" />

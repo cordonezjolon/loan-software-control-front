@@ -3,6 +3,7 @@
 import React from 'react';
 import { cn } from '@/lib/utils';
 import { LoadingSpinner } from './LoadingSpinner';
+import { useI18n } from '@/lib/i18n/I18nProvider';
 
 type Column<T> = {
   key: string;
@@ -25,10 +26,12 @@ export function DataTable<T extends { id: string }>({
   columns,
   data,
   isLoading,
-  emptyMessage = 'No data found.',
+  emptyMessage,
   onRowClick,
   className,
 }: DataTableProps<T>) {
+  const { t } = useI18n();
+
   return (
     <div className={cn('overflow-x-auto rounded-lg border border-border', className)}>
       <table className="w-full text-sm">
@@ -57,7 +60,7 @@ export function DataTable<T extends { id: string }>({
           ) : data.length === 0 ? (
             <tr>
               <td colSpan={columns.length} className="py-12 text-center text-muted-foreground">
-                {emptyMessage}
+                {emptyMessage ?? t('common.noDataFound')}
               </td>
             </tr>
           ) : (

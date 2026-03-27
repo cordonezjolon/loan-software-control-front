@@ -13,8 +13,10 @@ import { formatCurrency } from '@/lib/formatters';
 import { PAGE_SIZE, CREDIT_SCORE_GOOD, CREDIT_SCORE_FAIR } from '@/lib/constants';
 import type { Client } from '@/types/client';
 import { ApiError } from '@/lib/api/client';
+import { useI18n } from '@/lib/i18n/I18nProvider';
 
 export default function ClientsPage() {
+  const { t } = useI18n();
   const router = useRouter();
   const [clientId, setClientId] = useState('');
   const [clientLabel, setClientLabel] = useState('');
@@ -32,18 +34,18 @@ export default function ClientsPage() {
   const columns = [
     {
       key: 'name',
-      header: 'Name',
+      header: t('pages.clients.name'),
       render: (_: unknown, row: Client) => (
         <Link href={`/clients/${row.id}`} className="font-medium text-primary hover:underline">
           {row.firstName} {row.lastName}
         </Link>
       ),
     },
-    { key: 'email', header: 'Email', render: (_: unknown, row: Client) => row.email },
-    { key: 'phoneNumber', header: 'Phone', render: (_: unknown, row: Client) => row.phoneNumber },
+    { key: 'email', header: t('pages.clients.email'), render: (_: unknown, row: Client) => row.email },
+    { key: 'phoneNumber', header: t('pages.clients.phone'), render: (_: unknown, row: Client) => row.phoneNumber },
     {
       key: 'creditScore',
-      header: 'Credit Score',
+      header: t('pages.clients.creditScore'),
       render: (_: unknown, row: Client) =>
         row.creditScore ? (
           <span
@@ -63,13 +65,13 @@ export default function ClientsPage() {
     },
     {
       key: 'monthlyIncome',
-      header: 'Monthly Income',
+      header: t('pages.clients.monthlyIncome'),
       render: (_: unknown, row: Client) =>
         row.monthlyIncome ? formatCurrency(row.monthlyIncome) : <span className="text-muted-foreground">—</span>,
     },
     {
       key: 'isActive',
-      header: 'Status',
+      header: t('pages.clients.status'),
       render: (_: unknown, row: Client) => (
         <span
           className={
@@ -78,7 +80,7 @@ export default function ClientsPage() {
               : 'inline-flex rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-500'
           }
         >
-          {row.isActive ? 'Active' : 'Inactive'}
+          {row.isActive ? t('status.active') : t('status.inactive')}
         </span>
       ),
     },
@@ -94,7 +96,7 @@ export default function ClientsPage() {
             }}
             className="text-xs text-primary hover:underline"
           >
-            Edit
+            {t('actions.edit')}
           </button>
           <button
             onClick={(e) => {
@@ -104,7 +106,7 @@ export default function ClientsPage() {
             }}
             className="text-xs text-destructive hover:underline"
           >
-            Delete
+            {t('actions.delete')}
           </button>
         </div>
       ),
@@ -115,9 +117,9 @@ export default function ClientsPage() {
     <div className="space-y-5">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-bold text-foreground">Clients</h1>
+          <h1 className="text-xl font-bold text-foreground">{t('pages.clients.title')}</h1>
           <p className="text-sm text-muted-foreground">
-            {data?.total ?? 0} total clients
+            {data?.total ?? 0} {t('pages.clients.totalClients')}
           </p>
         </div>
         <Link
@@ -125,7 +127,7 @@ export default function ClientsPage() {
           className="flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/90"
         >
           <Plus className="h-4 w-4" />
-          New Client
+          {t('pages.clients.newClient')}
         </Link>
       </div>
 
@@ -147,7 +149,7 @@ export default function ClientsPage() {
         columns={columns}
         data={data?.data ?? []}
         isLoading={isLoading}
-        emptyMessage="No clients found."
+        emptyMessage={t('pages.clients.noClientsFound')}
         onRowClick={(row) => router.push(`/clients/${row.id}`)}
       />
 
@@ -162,10 +164,10 @@ export default function ClientsPage() {
 
       <ConfirmDialog
         open={deleteId !== null}
-        title="Delete Client"
-        description="Are you sure you want to delete this client? This action cannot be undone."
+        title={t('pages.clients.deleteTitle')}
+        description={t('pages.clients.deleteDescription')}
         errorMessage={deleteError ?? undefined}
-        confirmLabel="Delete"
+        confirmLabel={t('actions.delete')}
         variant="danger"
         isLoading={deleteClient.isPending}
         onConfirm={async () => {
@@ -179,7 +181,7 @@ export default function ClientsPage() {
                 setDeleteError(error.message);
                 return;
               }
-              setDeleteError('Unable to delete client. Please try again.');
+              setDeleteError(t('pages.clients.deleteFailed'));
             }
           }
         }}

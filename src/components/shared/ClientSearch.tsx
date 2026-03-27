@@ -7,6 +7,7 @@ import { clientsApi } from '@/lib/api/clients';
 import { useDebounce } from '@/hooks/useDebounce';
 import { DEBOUNCE_CLIENT_SEARCH } from '@/lib/constants';
 import type { Client } from '@/types/client';
+import { useI18n } from '@/lib/i18n/I18nProvider';
 
 export interface ClientSearchProps {
   selectedId: string;
@@ -23,6 +24,7 @@ export function ClientSearch({
   onClear,
   className = 'w-72',
 }: ClientSearchProps) {
+  const { t } = useI18n();
   const [search, setSearch] = useState('');
   const [open, setOpen] = useState(false);
   const debouncedSearch = useDebounce(search, DEBOUNCE_CLIENT_SEARCH);
@@ -89,7 +91,7 @@ export function ClientSearch({
           <input
             ref={inputRef}
             type="text"
-            placeholder={selectedId ? selectedLabel : 'Search client by name or email…'}
+            placeholder={selectedId ? selectedLabel : t('common.searchClientByNameOrEmail')}
             value={search}
             onChange={(e) => {
               setSearch(e.target.value);
@@ -97,7 +99,7 @@ export function ClientSearch({
             }}
             onFocus={() => setOpen(true)}
             className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
-            aria-label="Search client"
+            aria-label={t('common.searchClient')}
             aria-autocomplete="list"
             aria-expanded={showDropdown}
           />
@@ -108,7 +110,7 @@ export function ClientSearch({
             type="button"
             onClick={handleClear}
             className="shrink-0 rounded-full p-0.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-            aria-label="Clear client filter"
+            aria-label={t('common.clearClientFilter')}
           >
             <X className="h-3.5 w-3.5" />
           </button>
@@ -125,15 +127,15 @@ export function ClientSearch({
             {isLoading && (
               <div className="flex items-center gap-2 px-4 py-3 text-xs text-muted-foreground">
                 <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-                Searching…
+                {t('common.searching')}
               </div>
             )}
 
             {!isLoading && clients && clients.length === 0 && (
               <div className="px-4 py-4 text-center">
-                <p className="text-sm font-medium text-foreground">No clients found</p>
+                <p className="text-sm font-medium text-foreground">{t('common.noClientsFound')}</p>
                 <p className="mt-0.5 text-xs text-muted-foreground">
-                  Try a different name or email
+                  {t('common.tryDifferentNameOrEmail')}
                 </p>
               </div>
             )}

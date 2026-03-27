@@ -15,6 +15,7 @@ import { InstallmentStatus } from '@/types/installment';
 import type { LoanInstallment } from '@/types/installment';
 import { formatCurrency } from '@/lib/formatters';
 import { PAGE_SIZE_LIST, DEFAULT_DATE_PRESET, NEXT_DAYS_RANGE } from '@/lib/constants';
+import { useI18n } from '@/lib/i18n/I18nProvider';
 
 // ─── Date preset helpers ────────────────────────────────────────────────────
 
@@ -57,26 +58,10 @@ function getPresetDates(preset: DatePreset): {
 
 // ─── Constants ──────────────────────────────────────────────────────────────
 
-const STATUS_TABS: { label: string; value: InstallmentStatus | '' }[] = [
-  { label: 'All statuses', value: '' },
-  { label: 'Pending', value: InstallmentStatus.Pending },
-  { label: 'Overdue', value: InstallmentStatus.Overdue },
-  { label: 'Paid', value: InstallmentStatus.Paid },
-  { label: 'Partial', value: InstallmentStatus.Partial },
-];
-
-const DATE_PRESETS: { label: string; value: DatePreset }[] = [
-  { label: '⚠ Overdue', value: 'overdue' },
-  { label: 'This week', value: 'thisWeek' },
-  { label: 'This month', value: 'thisMonth' },
-  { label: `Next ${NEXT_DAYS_RANGE} days`, value: 'next30' },
-  { label: 'All time', value: 'all' },
-  { label: 'Custom range', value: 'custom' },
-];
-
 // ─── Page ───────────────────────────────────────────────────────────────────
 
 export default function InstallmentsPage() {
+  const { t } = useI18n();
   const [status, setStatus] = useState<InstallmentStatus | ''>('');
   const [page, setPage] = useState(1);
   const [payingInstallment, setPayingInstallment] = useState<LoanInstallment | null>(null);
@@ -127,10 +112,27 @@ export default function InstallmentsPage() {
   const overdueCount = stats?.overdueInstallments ?? 0;
   const hasActiveFilters = Boolean(clientId || datePreset !== 'thisMonth' || status);
 
+  const STATUS_TABS: { label: string; value: InstallmentStatus | '' }[] = [
+    { label: t('status.allStatuses'), value: '' },
+    { label: t('status.pending'), value: InstallmentStatus.Pending },
+    { label: t('status.overdue'), value: InstallmentStatus.Overdue },
+    { label: t('status.paid'), value: InstallmentStatus.Paid },
+    { label: t('status.partial'), value: InstallmentStatus.Partial },
+  ];
+
+  const DATE_PRESETS: { label: string; value: DatePreset }[] = [
+    { label: `⚠ ${t('status.overdue')}`, value: 'overdue' },
+    { label: t('pages.installments.thisWeek'), value: 'thisWeek' },
+    { label: t('pages.installments.thisMonth'), value: 'thisMonth' },
+    { label: `${t('pages.installments.nextDays')} ${NEXT_DAYS_RANGE}`, value: 'next30' },
+    { label: t('pages.installments.allTime'), value: 'all' },
+    { label: t('pages.installments.customRange'), value: 'custom' },
+  ];
+
   const columns = [
     {
       key: 'client',
-      header: 'Client',
+      header: t('pages.installments.client'),
       render: (_: unknown, row: LoanInstallment) => {
         const client = row.loan?.client;
         if (!client) return <span className="text-xs text-muted-foreground">—</span>;
@@ -153,22 +155,22 @@ export default function InstallmentsPage() {
     },
     {
       key: 'dueDate',
-      header: 'Due Date',
+      header: t('pages.installments.dueDateCol'),
       render: (_: unknown, row: LoanInstallment) => <DateDisplay value={row.dueDate} />,
     },
     {
       key: 'principalAmount',
-      header: 'Principal',
+      header: t('pages.installments.principal'),
       render: (_: unknown, row: LoanInstallment) => <CurrencyDisplay value={row.principalAmount} />,
     },
     {
       key: 'interestAmount',
-      header: 'Interest',
+      header: t('pages.installments.interest'),
       render: (_: unknown, row: LoanInstallment) => <CurrencyDisplay value={row.interestAmount} />,
     },
     {
       key: 'totalAmount',
-      header: 'Total',
+      header: t('pages.installments.total'),
       render: (_: unknown, row: LoanInstallment) => (
         <span className="font-semibold">
           <CurrencyDisplay value={row.totalAmount} />
@@ -177,7 +179,7 @@ export default function InstallmentsPage() {
     },
     {
       key: 'lateFee',
-      header: 'Late Fee',
+      header: t('pages.installments.lateFee'),
       render: (_: unknown, row: LoanInstallment) =>
         row.lateFee > 0 ? (
           <CurrencyDisplay value={row.lateFee} className="text-destructive" />
@@ -187,7 +189,7 @@ export default function InstallmentsPage() {
     },
     {
       key: 'remainingBalance',
-      header: 'Remaining',
+      header: t('pages.installments.remaining'),
       render: (_: unknown, row: LoanInstallment) => <CurrencyDisplay value={row.remainingBalance} />,
     },
     {
@@ -204,10 +206,10 @@ export default function InstallmentsPage() {
             onClick={() => setPayingInstallment(row)}
             className="rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90"
           >
-            Pay
+            {t('actions.pay')}
           </button>
         ) : (
-          <span className="text-xs text-muted-foreground">Paid</span>
+          <span className="text-xs text-muted-foreground">{t('status.paid')}</span>
         ),
     },
   ];
@@ -217,9 +219,9 @@ export default function InstallmentsPage() {
       {/* Header */}
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-xl font-bold text-foreground">Installments</h1>
+          <h1 className="text-xl font-bold text-foreground">{t('pages.installments.title')}</h1>
           <p className="text-sm text-muted-foreground">
-            {isLoading ? 'Loading…' : `${data?.total ?? 0} results`}
+            {isLoading ? t('common.loading') : `${data?.total ?? 0} ${t('pages.installments.results')}`}
           </p>
         </div>
         {hasActiveFilters && (
@@ -228,7 +230,7 @@ export default function InstallmentsPage() {
             className="flex shrink-0 items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:border-foreground/40 hover:text-foreground"
           >
             <X className="h-3.5 w-3.5" />
-            Clear filters
+            {t('common.clearFilters')}
           </button>
         )}
       </div>
@@ -239,17 +241,17 @@ export default function InstallmentsPage() {
           <AlertTriangle className="h-5 w-5 shrink-0 text-destructive" />
           <div className="flex-1">
             <p className="text-sm font-semibold text-destructive">
-              {overdueCount} overdue installment{overdueCount !== 1 ? 's' : ''}
+              {overdueCount} {t('pages.installments.overdueInstallments')}
             </p>
             <p className="text-xs text-muted-foreground">
-              Total overdue: {stats ? formatCurrency(stats.overdueAmount) : '—'}
+              {t('pages.installments.totalOverdue')}: {stats ? formatCurrency(stats.overdueAmount) : '—'}
             </p>
           </div>
           <button
             onClick={() => { handlePresetChange('overdue'); handleStatusChange(''); }}
             className="shrink-0 rounded-md bg-destructive/10 px-3 py-1 text-xs font-medium text-destructive transition-colors hover:bg-destructive/20"
           >
-            View overdue
+            {t('pages.installments.viewOverdue')}
           </button>
         </div>
       )}
@@ -258,21 +260,21 @@ export default function InstallmentsPage() {
       {stats && (
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
           <StatsCard
-            title="Total Installments"
+            title={t('pages.installments.totalInstallments')}
             value={stats.totalInstallments}
             icon={<Calendar className="h-5 w-5" />}
           />
           <StatsCard
-            title="Paid"
+            title={t('status.paid')}
             value={stats.paidInstallments}
             icon={<DollarSign className="h-5 w-5" />}
           />
           <StatsCard
-            title="Overdue"
+            title={t('status.overdue')}
             value={stats.overdueInstallments}
             subtitle={formatCurrency(stats.overdueAmount)}
           />
-          <StatsCard title="Total Late Fees" value={formatCurrency(stats.totalLateFees)} />
+          <StatsCard title={t('pages.installments.totalLateFees')} value={formatCurrency(stats.totalLateFees)} />
         </div>
       )}
 
@@ -281,7 +283,7 @@ export default function InstallmentsPage() {
         {/* Row 1: Date presets */}
         <div>
           <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-            Due date
+            {t('pages.installments.dueDate')}
           </p>
           <div className="flex flex-wrap gap-2">
             {DATE_PRESETS.map((preset) => (
@@ -307,15 +309,15 @@ export default function InstallmentsPage() {
                 value={customFrom}
                 onChange={(e) => { setCustomFrom(e.target.value); setPage(1); }}
                 className="rounded-lg border border-border bg-background px-3 py-1.5 text-xs text-foreground outline-none focus:border-primary"
-                aria-label="From date"
+                aria-label={t('common.fromDate')}
               />
-              <span className="text-xs text-muted-foreground">to</span>
+              <span className="text-xs text-muted-foreground">{t('common.to')}</span>
               <input
                 type="date"
                 value={customTo}
                 onChange={(e) => { setCustomTo(e.target.value); setPage(1); }}
                 className="rounded-lg border border-border bg-background px-3 py-1.5 text-xs text-foreground outline-none focus:border-primary"
-                aria-label="To date"
+                aria-label={t('common.toDate')}
               />
             </div>
           )}
@@ -324,7 +326,7 @@ export default function InstallmentsPage() {
         {/* Row 2: Client filter */}
         <div>
           <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-            Client
+            {t('pages.installments.client')}
           </p>
           <ClientSearch
             selectedId={clientId}
@@ -356,7 +358,7 @@ export default function InstallmentsPage() {
         columns={columns}
         data={data?.data ?? []}
         isLoading={isLoading}
-        emptyMessage="No installments found for the selected filters."
+        emptyMessage={t('pages.installments.noInstallments')}
       />
 
       {data && data.totalPages > 1 && (

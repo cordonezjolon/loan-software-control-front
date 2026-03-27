@@ -20,6 +20,7 @@ import { formatCurrency, formatMonths } from '@/lib/formatters';
 import { APP_CURRENCY } from '@/lib/constants';
 import { useDebounce } from '@/hooks/useDebounce';
 import type { AmortizationEntry } from '@/types/loan';
+import { useI18n } from '@/lib/i18n/I18nProvider';
 
 const inputCls =
   'h-10 w-full rounded-md border border-input bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring';
@@ -35,6 +36,7 @@ function Field({ label, id, error, children }: { label: string; id: string; erro
 }
 
 export default function CalculationsPage() {
+  const { t } = useI18n();
   const calculateMutation = useCalculateLoanMutation();
   const [showAllRows, setShowAllRows] = useState(false);
 
@@ -81,15 +83,15 @@ export default function CalculationsPage() {
       <div>
         <h1 className="flex items-center gap-2 text-xl font-bold text-foreground">
           <Calculator className="h-5 w-5" />
-          Loan Calculator
+          {t('pages.calculations.title')}
         </h1>
-        <p className="text-sm text-muted-foreground">Calculate monthly payments and amortization schedule</p>
+        <p className="text-sm text-muted-foreground">{t('pages.calculations.subtitle')}</p>
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         {/* Calculator inputs */}
         <div className="rounded-xl border border-border bg-card p-5 shadow-card">
-          <h2 className="mb-4 text-sm font-semibold text-foreground">Loan Parameters</h2>
+          <h2 className="mb-4 text-sm font-semibold text-foreground">{t('pages.calculations.loanParameters')}</h2>
           <form onSubmit={handleSubmit((d) => calculateMutation.mutate(d))} noValidate className="space-y-4">
             <Field label={`Principal (${APP_CURRENCY})`} id="principal" error={errors.principal?.message}>
               <input
@@ -100,7 +102,7 @@ export default function CalculationsPage() {
                 className={inputCls}
               />
             </Field>
-            <Field label="Annual Interest Rate (e.g. 0.05 = 5%)" id="interestRate" error={errors.interestRate?.message}>
+            <Field label={t('pages.calculations.annualInterestRate')} id="interestRate" error={errors.interestRate?.message}>
               <input
                 id="interestRate"
                 type="number"
@@ -109,7 +111,7 @@ export default function CalculationsPage() {
                 className={inputCls}
               />
             </Field>
-            <Field label="Term (months)" id="termInMonths" error={errors.termInMonths?.message}>
+            <Field label={t('pages.calculations.termMonths')} id="termInMonths" error={errors.termInMonths?.message}>
               <input
                 id="termInMonths"
                 type="number"
@@ -130,7 +132,7 @@ export default function CalculationsPage() {
               className="flex w-full items-center justify-center gap-2 rounded-md bg-primary py-2 text-sm font-medium text-white hover:bg-primary/90 disabled:opacity-60"
             >
               {calculateMutation.isPending && <RefreshCw className="h-4 w-4 animate-spin" />}
-              Calculate
+              {t('pages.calculations.calculate')}
             </button>
           </form>
         </div>
@@ -142,11 +144,11 @@ export default function CalculationsPage() {
               {/* Summary cards */}
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                 {[
-                  { label: 'Monthly Payment', value: formatCurrency(result.monthlyPayment), highlight: true },
-                  { label: 'Total Interest', value: formatCurrency(result.totalInterest) },
-                  { label: 'Total Amount', value: formatCurrency(result.totalAmount) },
+                  { label: t('pages.calculations.monthlyPayment'), value: formatCurrency(result.monthlyPayment), highlight: true },
+                  { label: t('pages.calculations.totalInterest'), value: formatCurrency(result.totalInterest) },
+                  { label: t('pages.calculations.totalAmount'), value: formatCurrency(result.totalAmount) },
                   {
-                    label: 'Effective Rate',
+                    label: t('pages.calculations.effectiveRate'),
                     value: `${((result.totalInterest / (result.totalAmount - result.totalInterest)) * 100).toFixed(2)}%`,
                   },
                 ].map(({ label, value, highlight }) => (
@@ -166,11 +168,11 @@ export default function CalculationsPage() {
 
               {/* Area chart */}
               <div className="rounded-xl border border-border bg-card p-5 shadow-card">
-                <h3 className="mb-4 text-sm font-semibold text-foreground">Principal vs Interest Over Time</h3>
+                <h3 className="mb-4 text-sm font-semibold text-foreground">{t('pages.calculations.principalVsInterest')}</h3>
                 <ResponsiveContainer width="100%" height={220}>
                   <AreaChart data={chartData}>
                     <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-                    <XAxis dataKey="month" tick={{ fontSize: 11 }} label={{ value: 'Month', position: 'insideBottom', offset: -2, fontSize: 11 }} />
+                    <XAxis dataKey="month" tick={{ fontSize: 11 }} label={{ value: t('pages.calculations.month'), position: 'insideBottom', offset: -2, fontSize: 11 }} />
                     <YAxis
                       tick={{ fontSize: 11 }}
                       tickFormatter={(v) => `${formatCurrency(Number(v)).replace(/\.00$/, '')}`}
@@ -180,8 +182,8 @@ export default function CalculationsPage() {
                       contentStyle={{ fontSize: 12 }}
                     />
                     <Legend wrapperStyle={{ fontSize: 12 }} />
-                    <Area type="monotone" dataKey="principal" stackId="1" stroke="#2563eb" fill="#93c5fd" name="Principal" />
-                    <Area type="monotone" dataKey="interest" stackId="1" stroke="#dc2626" fill="#fca5a5" name="Interest" />
+                    <Area type="monotone" dataKey="principal" stackId="1" stroke="#2563eb" fill="#93c5fd" name={t('pages.calculations.principal')} />
+                    <Area type="monotone" dataKey="interest" stackId="1" stroke="#dc2626" fill="#fca5a5" name={t('pages.calculations.interest')} />
                   </AreaChart>
                 </ResponsiveContainer>
               </div>
@@ -189,15 +191,15 @@ export default function CalculationsPage() {
               {/* Amortization table */}
               <div className="rounded-xl border border-border bg-card shadow-card overflow-x-auto">
                 <div className="flex items-center justify-between px-5 py-3 border-b border-border">
-                  <h3 className="text-sm font-semibold text-foreground">Amortization Schedule</h3>
+                  <h3 className="text-sm font-semibold text-foreground">{t('pages.calculations.amortizationSchedule')}</h3>
                   <span className="text-xs text-muted-foreground">
-                    {result.amortizationSchedule.length} payments
+                    {result.amortizationSchedule.length} {t('pages.calculations.paymentsSuffix')}
                   </span>
                 </div>
                 <table className="w-full text-sm">
                   <thead className="bg-muted/30">
                     <tr>
-                      {['#', 'Principal', 'Interest', 'Total', 'Balance'].map((h) => (
+                      {['#', t('pages.calculations.principal'), t('pages.calculations.interest'), t('pages.calculations.totalAmount'), t('pages.calculations.balance')].map((h) => (
                         <th key={h} className="px-4 py-2 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                           {h}
                         </th>
@@ -222,7 +224,7 @@ export default function CalculationsPage() {
                       onClick={() => setShowAllRows((v) => !v)}
                       className="text-xs font-medium text-primary hover:underline"
                     >
-                      {showAllRows ? 'Show less' : `Show all ${result.amortizationSchedule.length} rows`}
+                      {showAllRows ? t('actions.showLess') : `${t('pages.calculations.showAllRows')} (${result.amortizationSchedule.length})`}
                     </button>
                   </div>
                 )}
@@ -230,7 +232,7 @@ export default function CalculationsPage() {
             </>
           ) : (
             <div className="flex h-48 items-center justify-center rounded-xl border border-border bg-card text-muted-foreground text-sm">
-              Enter loan parameters to see the calculation
+              {t('pages.calculations.noCalculation')}
             </div>
           )}
         </div>

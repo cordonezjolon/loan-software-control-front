@@ -15,6 +15,7 @@ import type { LoanPayment } from '@/types/payment';
 import { cn } from '@/lib/utils';
 import { useDebounce } from '@/hooks/useDebounce';
 import { PAGE_SIZE_LIST, DEBOUNCE_DELAY, DEFAULT_DATE_PRESET, NEXT_DAYS_RANGE } from '@/lib/constants';
+import { useI18n } from '@/lib/i18n/I18nProvider';
 
 // ─── Date preset helpers ────────────────────────────────────────────────────
 
@@ -52,47 +53,22 @@ function getPresetDates(preset: DatePreset): { from: string; to: string } {
 
 // ─── Constants ──────────────────────────────────────────────────────────────
 
-const DATE_PRESETS: { label: string; value: DatePreset }[] = [
-  { label: 'Today',       value: 'today' },
-  { label: 'This week',   value: 'thisWeek' },
-  { label: 'This month',  value: 'thisMonth' },
-  { label: `Last ${NEXT_DAYS_RANGE} days`, value: 'last30' },
-  { label: 'All time',    value: 'all' },
-  { label: 'Custom range', value: 'custom' },
-];
-
-const STATUS_TABS: { label: string; value: PaymentStatus | '' }[] = [
-  { label: 'All statuses',  value: '' },
-  { label: 'Completed',     value: PaymentStatus.Completed },
-  { label: 'Pending',       value: PaymentStatus.Pending },
-  { label: 'Failed',        value: PaymentStatus.Failed },
-  { label: 'Cancelled',     value: PaymentStatus.Cancelled },
-];
-
-const METHOD_PILLS: { label: string; value: PaymentMethod | '' }[] = [
-  { label: 'All methods',    value: '' },
-  { label: 'Cash',          value: PaymentMethod.Cash },
-  { label: 'Bank Transfer', value: PaymentMethod.BankTransfer },
-  { label: 'Credit Card',   value: PaymentMethod.CreditCard },
-  { label: 'Check',         value: PaymentMethod.Check },
-];
-
 // ─── Status & Method Badges ─────────────────────────────────────────────────
 
-function StatusBadge({ status }: { status: PaymentStatus }) {
+function StatusBadge({ status, label }: { status: PaymentStatus; label: string }) {
   const cfg = PAYMENT_STATUS_CONFIG[status];
   return (
     <span className={cn('inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium', cfg.color, cfg.bg)}>
-      {cfg.label}
+      {label}
     </span>
   );
 }
 
-function MethodBadge({ method }: { method: PaymentMethod }) {
+function MethodBadge({ method, label }: { method: PaymentMethod; label: string }) {
   const cfg = PAYMENT_STATUS_CONFIG[method];
   return (
     <span className={cn('inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium', cfg.color, cfg.bg)}>
-      {cfg.label}
+      {label}
     </span>
   );
 }
@@ -100,6 +76,7 @@ function MethodBadge({ method }: { method: PaymentMethod }) {
 // ─── Page ───────────────────────────────────────────────────────────────────
 
 export default function PaymentsPage() {
+  const { t } = useI18n();
   const [page, setPage] = useState(1);
   const [status, setStatus] = useState<PaymentStatus | ''>('');
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod | ''>('');
@@ -160,15 +137,40 @@ export default function PaymentsPage() {
     clientId || datePreset !== 'thisMonth' || status || paymentMethod || refSearch,
   );
 
+  const DATE_PRESETS: { label: string; value: DatePreset }[] = [
+    { label: t('pages.payments.today'), value: 'today' },
+    { label: t('pages.payments.thisWeek'), value: 'thisWeek' },
+    { label: t('pages.payments.thisMonth'), value: 'thisMonth' },
+    { label: `${t('pages.payments.lastDays')} ${NEXT_DAYS_RANGE}`, value: 'last30' },
+    { label: t('pages.payments.allTime'), value: 'all' },
+    { label: t('pages.payments.customRange'), value: 'custom' },
+  ];
+
+  const STATUS_TABS: { label: string; value: PaymentStatus | '' }[] = [
+    { label: t('status.allStatuses'), value: '' },
+    { label: t('status.completed'), value: PaymentStatus.Completed },
+    { label: t('status.pending'), value: PaymentStatus.Pending },
+    { label: t('status.failed'), value: PaymentStatus.Failed },
+    { label: t('status.cancelled'), value: PaymentStatus.Cancelled },
+  ];
+
+  const METHOD_PILLS: { label: string; value: PaymentMethod | '' }[] = [
+    { label: t('status.allMethods'), value: '' },
+    { label: t('method.cash'), value: PaymentMethod.Cash },
+    { label: t('method.bankTransfer'), value: PaymentMethod.BankTransfer },
+    { label: t('method.creditCard'), value: PaymentMethod.CreditCard },
+    { label: t('method.check'), value: PaymentMethod.Check },
+  ];
+
   const columns = [
     {
       key: 'paymentDate',
-      header: 'Date',
+      header: t('pages.payments.date'),
       render: (_: unknown, row: LoanPayment) => <DateDisplay value={row.paymentDate} />,
     },
     {
       key: 'client',
-      header: 'Client',
+      header: t('pages.payments.client'),
       render: (_: unknown, row: LoanPayment) => {
         const client = row.installment?.loan?.client;
         return client ? (
@@ -184,7 +186,7 @@ export default function PaymentsPage() {
     },
     {
       key: 'installmentNumber',
-      header: 'Installment #',
+      header: t('pages.payments.installmentNumber'),
       render: (_: unknown, row: LoanPayment) => (
         <span className="font-mono text-sm text-muted-foreground">
           {row.installment?.installmentNumber ?? '—'}
@@ -193,7 +195,7 @@ export default function PaymentsPage() {
     },
     {
       key: 'amount',
-      header: 'Amount',
+      header: t('pages.payments.amount'),
       render: (_: unknown, row: LoanPayment) => (
         <span className="font-semibold">
           <CurrencyDisplay value={row.amount} />
@@ -202,17 +204,33 @@ export default function PaymentsPage() {
     },
     {
       key: 'paymentMethod',
-      header: 'Method',
-      render: (_: unknown, row: LoanPayment) => <MethodBadge method={row.paymentMethod} />,
+      header: t('pages.payments.method'),
+      render: (_: unknown, row: LoanPayment) => {
+        const methodLabels: Record<PaymentMethod, string> = {
+          cash: t('method.cash'),
+          bank_transfer: t('method.bankTransfer'),
+          credit_card: t('method.creditCard'),
+          check: t('method.check'),
+        };
+        return <MethodBadge method={row.paymentMethod} label={methodLabels[row.paymentMethod]} />;
+      },
     },
     {
       key: 'status',
-      header: 'Status',
-      render: (_: unknown, row: LoanPayment) => <StatusBadge status={row.status} />,
+      header: t('pages.payments.status'),
+      render: (_: unknown, row: LoanPayment) => {
+        const statusLabels: Record<PaymentStatus, string> = {
+          pending: t('status.pending'),
+          completed: t('status.completed'),
+          failed: t('status.failed'),
+          cancelled: t('status.cancelled'),
+        };
+        return <StatusBadge status={row.status} label={statusLabels[row.status]} />;
+      },
     },
     {
       key: 'referenceNumber',
-      header: 'Reference',
+      header: t('pages.payments.reference'),
       render: (_: unknown, row: LoanPayment) =>
         row.referenceNumber ? (
           <span className="font-mono text-xs text-muted-foreground">{row.referenceNumber}</span>
@@ -227,13 +245,13 @@ export default function PaymentsPage() {
         row.status === PaymentStatus.Completed || row.status === PaymentStatus.Pending ? (
           <button
             onClick={() => {
-              if (confirm('Cancel this payment?')) {
+              if (confirm(t('pages.payments.cancelPaymentConfirm'))) {
                 void cancelPayment.mutate({ id: row.id });
               }
             }}
             className="rounded-md border border-border px-2.5 py-1 text-xs text-muted-foreground transition-colors hover:border-destructive/50 hover:text-destructive"
           >
-            Cancel
+            {t('actions.cancel')}
           </button>
         ) : null,
     },
@@ -246,10 +264,10 @@ export default function PaymentsPage() {
         <div>
           <h1 className="flex items-center gap-2 text-xl font-bold text-foreground">
             <DollarSign className="h-5 w-5" />
-            Payments
+            {t('pages.payments.title')}
           </h1>
           <p className="text-sm text-muted-foreground">
-            {isLoading ? 'Loading…' : `${data?.total ?? 0} results`}
+            {isLoading ? t('common.loading') : `${data?.total ?? 0} ${t('pages.payments.results')}`}
           </p>
         </div>
         {hasActiveFilters && (
@@ -258,17 +276,17 @@ export default function PaymentsPage() {
             className="flex shrink-0 items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:border-foreground/40 hover:text-foreground"
           >
             <X className="h-3.5 w-3.5" />
-            Clear filters
+            {t('common.clearFilters')}
           </button>
         )}
       </div>
 
       {/* Stats */}
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-        <StatsCard title="Total Payments" value={data?.total ?? 0} icon={<CreditCard className="h-5 w-5" />} />
-        <StatsCard title="Period Total" value={formatCurrency(totalAmount)} icon={<DollarSign className="h-5 w-5" />} />
-        <StatsCard title="Completed" value={completedCount} icon={<CheckCircle2 className="h-5 w-5 text-green-600" />} />
-        <StatsCard title="Failed / Cancelled" value={failedOrCancelled} icon={<XCircle className="h-5 w-5 text-red-500" />} />
+        <StatsCard title={t('pages.payments.totalPayments')} value={data?.total ?? 0} icon={<CreditCard className="h-5 w-5" />} />
+        <StatsCard title={t('pages.payments.periodTotal')} value={formatCurrency(totalAmount)} icon={<DollarSign className="h-5 w-5" />} />
+        <StatsCard title={t('status.completed')} value={completedCount} icon={<CheckCircle2 className="h-5 w-5 text-green-600" />} />
+        <StatsCard title={t('pages.payments.failedCancelled')} value={failedOrCancelled} icon={<XCircle className="h-5 w-5 text-red-500" />} />
       </div>
 
       {/* ─── Filter panel ──────────────────────────────────────────────────── */}
@@ -276,7 +294,7 @@ export default function PaymentsPage() {
         {/* Date presets */}
         <div>
           <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-            Payment date
+            {t('pages.payments.paymentDate')}
           </p>
           <div className="flex flex-wrap gap-2">
             {DATE_PRESETS.map((preset) => (
@@ -301,15 +319,15 @@ export default function PaymentsPage() {
                 value={customFrom}
                 onChange={(e) => { setCustomFrom(e.target.value); setPage(1); }}
                 className="rounded-lg border border-border bg-background px-3 py-1.5 text-xs text-foreground outline-none focus:border-primary"
-                aria-label="From date"
+                aria-label={t('common.fromDate')}
               />
-              <span className="text-xs text-muted-foreground">to</span>
+              <span className="text-xs text-muted-foreground">{t('common.to')}</span>
               <input
                 type="date"
                 value={customTo}
                 onChange={(e) => { setCustomTo(e.target.value); setPage(1); }}
                 className="rounded-lg border border-border bg-background px-3 py-1.5 text-xs text-foreground outline-none focus:border-primary"
-                aria-label="To date"
+                aria-label={t('common.toDate')}
               />
             </div>
           )}
@@ -318,7 +336,7 @@ export default function PaymentsPage() {
         {/* Payment method pills */}
         <div>
           <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-            Payment method
+            {t('pages.payments.paymentMethod')}
           </p>
           <div className="flex flex-wrap gap-2">
             {METHOD_PILLS.map((pill) => (
@@ -341,7 +359,7 @@ export default function PaymentsPage() {
         <div className="flex flex-wrap gap-4">
           <div>
             <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-              Client
+              {t('pages.payments.client')}
             </p>
             <ClientSearch
               selectedId={clientId}
@@ -352,13 +370,13 @@ export default function PaymentsPage() {
           </div>
           <div>
             <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-              Reference / Notes
+              {t('pages.payments.referenceNotes')}
             </p>
             <div className="flex items-center gap-2 rounded-lg border border-border bg-white px-3 py-2 transition-colors focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20">
               <Search className="h-4 w-4 shrink-0 text-muted-foreground" />
               <input
                 type="text"
-                placeholder="Search by reference or notes…"
+                placeholder={t('pages.payments.searchReference')}
                 value={refSearch}
                 onChange={(e) => { setRefSearch(e.target.value); setPage(1); }}
                 className="w-60 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
@@ -368,7 +386,7 @@ export default function PaymentsPage() {
                   type="button"
                   onClick={() => { setRefSearch(''); setPage(1); }}
                   className="shrink-0 rounded-full p-0.5 text-muted-foreground hover:bg-muted hover:text-foreground"
-                  aria-label="Clear reference search"
+                  aria-label={t('pages.payments.clearReferenceSearch')}
                 >
                   <X className="h-3.5 w-3.5" />
                 </button>
@@ -399,7 +417,7 @@ export default function PaymentsPage() {
         columns={columns}
         data={payments}
         isLoading={isLoading}
-        emptyMessage="No payments found for the selected filters."
+        emptyMessage={t('pages.payments.noPayments')}
       />
 
       {data && data.totalPages > 1 && (

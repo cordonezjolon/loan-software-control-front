@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { cn } from '@/lib/utils';
+import { useI18n } from '@/lib/i18n/I18nProvider';
 
 interface LoadingSpinnerProps {
   size?: 'sm' | 'md' | 'lg';
@@ -9,10 +10,12 @@ interface LoadingSpinnerProps {
 }
 
 export function LoadingSpinner({ size = 'md', className }: LoadingSpinnerProps) {
+  const { t } = useI18n();
+
   return (
     <div
       role="status"
-      aria-label="Loading"
+      aria-label={t('common.loadingLabel')}
       className={cn(
         'animate-spin rounded-full border-2 border-current border-t-transparent',
         size === 'sm' && 'h-4 w-4',

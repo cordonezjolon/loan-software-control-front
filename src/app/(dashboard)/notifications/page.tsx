@@ -9,15 +9,10 @@ import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { Pagination } from '@/components/shared/Pagination';
 import { NotificationStatus, type NotificationCategory, type NotificationPriority } from '@/types/notification';
-
-const STATUS_TABS: { label: string; value: '' | NotificationStatus }[] = [
-  { label: 'All', value: '' },
-  { label: 'Unread', value: NotificationStatus.Pending },
-  { label: 'Sent', value: NotificationStatus.Sent },
-  { label: 'Read', value: NotificationStatus.Read },
-];
+import { useI18n } from '@/lib/i18n/I18nProvider';
 
 export default function NotificationsPage() {
+  const { t } = useI18n();
   const [status, setStatus] = useState<'' | NotificationStatus>('');
   const [page, setPage] = useState(1);
   const limit = 20;
@@ -34,6 +29,13 @@ export default function NotificationsPage() {
   const total = data?.total ?? 0;
   const totalPages = data?.totalPages ?? 1;
 
+  const STATUS_TABS: { label: string; value: '' | NotificationStatus }[] = [
+    { label: t('status.all'), value: '' },
+    { label: t('pages.notifications.unread'), value: NotificationStatus.Pending },
+    { label: t('status.sent'), value: NotificationStatus.Sent },
+    { label: t('status.read'), value: NotificationStatus.Read },
+  ];
+
   function handleStatusTab(tab: '' | NotificationStatus) {
     setStatus(tab);
     setPage(1);
@@ -45,14 +47,14 @@ export default function NotificationsPage() {
         <div>
           <h1 className="flex items-center gap-2 text-xl font-bold text-foreground">
             <Bell className="h-5 w-5" />
-            Notifications
+            {t('pages.notifications.title')}
           </h1>
-          <p className="text-sm text-muted-foreground">Manage system notifications and alerts</p>
+          <p className="text-sm text-muted-foreground">{t('pages.notifications.subtitle')}</p>
         </div>
 
         {stats && stats.unread > 0 && (
           <span className="inline-flex items-center gap-1 rounded-full bg-destructive/10 px-3 py-1 text-xs font-medium text-destructive">
-            {stats.unread} unread
+            {stats.unread} {t('pages.notifications.unread').toLowerCase()}
           </span>
         )}
       </div>
@@ -61,10 +63,10 @@ export default function NotificationsPage() {
       {stats && (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           {[
-            { label: 'Total', value: stats.total ?? 0 },
-            { label: 'Unread', value: stats.unread ?? 0 },
-            { label: 'Delivered', value: stats.delivered ?? 0 },
-            { label: 'Failed', value: stats.failed ?? 0 },
+            { label: t('pages.notifications.total'), value: stats.total ?? 0 },
+            { label: t('pages.notifications.unread'), value: stats.unread ?? 0 },
+            { label: t('pages.notifications.delivered'), value: stats.delivered ?? 0 },
+            { label: t('pages.notifications.failed'), value: stats.failed ?? 0 },
           ].map(({ label, value }) => (
             <div key={label} className="rounded-lg border border-border bg-card p-3 shadow-card">
               <p className="text-xs text-muted-foreground">{label}</p>
@@ -91,7 +93,7 @@ export default function NotificationsPage() {
         ))}
         <div className="ml-auto flex items-center gap-1 pr-1 text-muted-foreground">
           <Filter className="h-3.5 w-3.5" />
-          <span className="text-xs">{total} total</span>
+          <span className="text-xs">{total} {t('pages.notifications.totalLabel')}</span>
         </div>
       </div>
 
@@ -102,11 +104,11 @@ export default function NotificationsPage() {
             <LoadingSpinner />
           </div>
         ) : error ? (
-          <div className="p-6 text-center text-sm text-muted-foreground">Failed to load notifications.</div>
+          <div className="p-6 text-center text-sm text-muted-foreground">{t('pages.notifications.failedToLoad')}</div>
         ) : notifications.length === 0 ? (
           <EmptyState
-            title="No notifications"
-            description="You're all caught up!"
+            title={t('pages.notifications.noNotifications')}
+            description={t('pages.notifications.allCaughtUp')}
             icon={<Bell className="h-10 w-10 text-muted-foreground/30" />}
           />
         ) : (
@@ -126,8 +128,8 @@ export default function NotificationsPage() {
                   <span
                     className="mt-1.5 h-2 w-2 flex-shrink-0 rounded-full"
                     style={{ backgroundColor: priorityConfig?.color ?? '#94a3b8' }}
-                    title={`Priority: ${n.priority}`}
-                    aria-label={`Priority: ${n.priority}`}
+                    title={`${t('pages.notifications.priority')}: ${n.priority}`}
+                    aria-label={`${t('pages.notifications.priority')}: ${n.priority}`}
                   />
 
                   <div className="min-w-0 flex-1">
@@ -157,8 +159,8 @@ export default function NotificationsPage() {
                       onClick={() => markReadMutation.mutate(n.id)}
                       disabled={markReadMutation.isPending}
                       className="flex-shrink-0 rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
-                      title="Mark as read"
-                      aria-label="Mark as read"
+                      title={t('actions.markAsRead')}
+                      aria-label={t('actions.markAsRead')}
                     >
                       <CheckCheck className="h-4 w-4" />
                     </button>

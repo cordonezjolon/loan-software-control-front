@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { cn } from '@/lib/utils';
+import { useI18n } from '@/lib/i18n/I18nProvider';
 
 interface PaginationProps {
   page: number;
@@ -11,6 +12,8 @@ interface PaginationProps {
 }
 
 export function Pagination({ page, totalPages, onPageChange, className }: PaginationProps) {
+  const { t } = useI18n();
+
   if (totalPages <= 1) return null;
 
   const pages = Array.from({ length: totalPages }, (_, i) => i + 1);
@@ -18,13 +21,13 @@ export function Pagination({ page, totalPages, onPageChange, className }: Pagina
 
   return (
     <nav
-      aria-label="Pagination"
+      aria-label={t('common.pagination')}
       className={cn('flex items-center justify-center gap-1', className)}
     >
       <button
         onClick={() => onPageChange(page - 1)}
         disabled={page === 1}
-        aria-label="Previous page"
+        aria-label={t('common.previousPage')}
         className="rounded-md px-2 py-1 text-sm font-medium text-muted-foreground hover:bg-accent disabled:opacity-40 disabled:cursor-not-allowed"
       >
         ‹
@@ -55,7 +58,7 @@ export function Pagination({ page, totalPages, onPageChange, className }: Pagina
       <button
         onClick={() => onPageChange(page + 1)}
         disabled={page === totalPages}
-        aria-label="Next page"
+        aria-label={t('common.nextPage')}
         className="rounded-md px-2 py-1 text-sm font-medium text-muted-foreground hover:bg-accent disabled:opacity-40 disabled:cursor-not-allowed"
       >
         ›

@@ -10,8 +10,10 @@ import { useClientStats } from '@/hooks/useClients';
 import { useLoanStatistics } from '@/hooks/useLoans';
 import { useInstallmentStatistics } from '@/hooks/useInstallments';
 import { formatCurrency, formatPercent } from '@/lib/formatters';
+import { useI18n } from '@/lib/i18n/I18nProvider';
 
 export default function DashboardPage() {
+  const { t } = useI18n();
   const { data: clientStats, isLoading: loadingClients } = useClientStats();
   const { data: loanStats, isLoading: loadingLoans } = useLoanStatistics();
   const { data: installmentStats, isLoading: loadingInstallments } = useInstallmentStatistics();
@@ -24,40 +26,40 @@ export default function DashboardPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-xl font-bold text-foreground">Dashboard</h1>
-        <p className="text-sm text-muted-foreground">Overview of your loan portfolio</p>
+        <h1 className="text-xl font-bold text-foreground">{t('pages.dashboard.title')}</h1>
+        <p className="text-sm text-muted-foreground">{t('pages.dashboard.subtitle')}</p>
       </div>
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatsCard
-          title="Total Loans"
+          title={t('pages.dashboard.totalLoans')}
           value={loadingLoans ? '—' : totalLoans}
-          subtitle="All time"
+          subtitle={t('pages.dashboard.allTime')}
           icon={<CreditCard className="h-5 w-5" />}
         />
         <StatsCard
-          title="Active Loans"
+          title={t('pages.dashboard.activeLoans')}
           value={loadingLoans ? '—' : activeLoans}
-          subtitle="Currently active"
+          subtitle={t('pages.dashboard.currentlyActive')}
           icon={<DollarSign className="h-5 w-5" />}
         />
         <StatsCard
-          title="Overdue Installments"
+          title={t('pages.dashboard.overdueInstallments')}
           value={loadingInstallments ? '—' : overdueCount}
           subtitle={
             installmentStats
-              ? `${formatCurrency(installmentStats.overdueAmount)} outstanding`
+                ? `${formatCurrency(installmentStats.overdueAmount)} ${t('pages.dashboard.outstanding')}`
               : undefined
           }
           icon={<AlertCircle className="h-5 w-5" />}
         />
         <StatsCard
-          title="Total Clients"
+          title={t('pages.dashboard.totalClients')}
           value={loadingClients ? '—' : (clientStats?.totalClients ?? 0)}
           subtitle={
             clientStats
-              ? `${clientStats.newClientsThisMonth} new this month`
+              ? `${clientStats.newClientsThisMonth} ${t('pages.dashboard.newThisMonth')}`
               : undefined
           }
           icon={<Users className="h-5 w-5" />}
@@ -67,29 +69,29 @@ export default function DashboardPage() {
       {/* Charts row */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <div className="rounded-xl border border-border bg-card p-5 shadow-card">
-          <h2 className="mb-4 text-sm font-semibold text-foreground">Loans by Status</h2>
+          <h2 className="mb-4 text-sm font-semibold text-foreground">{t('pages.dashboard.loansByStatus')}</h2>
           <LoanStatusChart statistics={loanStats} isLoading={loadingLoans} />
         </div>
 
         <div className="rounded-xl border border-border bg-card p-5 shadow-card">
-          <h2 className="mb-3 text-sm font-semibold text-foreground">Portfolio Summary</h2>
+          <h2 className="mb-3 text-sm font-semibold text-foreground">{t('pages.dashboard.portfolioSummary')}</h2>
           <dl className="space-y-3">
             {[
-              { label: 'Total Portfolio Value', value: formatCurrency(totalPortfolio) },
+              { label: t('pages.dashboard.totalPortfolioValue'), value: formatCurrency(totalPortfolio) },
               {
-                label: 'Average Loan Amount',
+                label: t('pages.dashboard.averageLoanAmount'),
                 value: loanStats ? formatCurrency(loanStats.averageLoanAmount) : '—',
               },
               {
-                label: 'Average Interest Rate',
+                label: t('pages.dashboard.averageInterestRate'),
                 value: loanStats ? formatPercent(loanStats.averageInterestRate) : '—',
               },
               {
-                label: 'Approval Rate',
+                label: t('pages.dashboard.approvalRate'),
                 value: loanStats ? formatPercent(loanStats.approvalRate / 100) : '—',
               },
               {
-                label: 'Average Credit Score',
+                label: t('pages.dashboard.averageCreditScore'),
                 value: clientStats?.averageCreditScore
                   ? Math.round(clientStats.averageCreditScore).toString()
                   : '—',

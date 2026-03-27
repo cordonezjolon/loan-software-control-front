@@ -7,20 +7,22 @@ import { X, LayoutDashboard, Users, CreditCard, Calendar, DollarSign, Calculator
 import { cn } from '@/lib/utils';
 import { useUiStore } from '@/stores/uiStore';
 import { APP_NAME } from '@/lib/constants';
+import { useI18n } from '@/lib/i18n/I18nProvider';
 
 const NAV_ITEMS = [
-  { href: '/', icon: LayoutDashboard, label: 'Dashboard' },
-  { href: '/clients', icon: Users, label: 'Clients' },
-  { href: '/loans', icon: CreditCard, label: 'Loans' },
-  { href: '/installments', icon: Calendar, label: 'Installments' },
-  { href: '/payments', icon: DollarSign, label: 'Payments' },
-  { href: '/calculations', icon: Calculator, label: 'Calculator' },
-  { href: '/notifications', icon: Bell, label: 'Notifications' },
+  { href: '/dashboard', icon: LayoutDashboard, labelKey: 'nav.dashboard' },
+  { href: '/clients', icon: Users, labelKey: 'nav.clients' },
+  { href: '/loans', icon: CreditCard, labelKey: 'nav.loans' },
+  { href: '/installments', icon: Calendar, labelKey: 'nav.installments' },
+  { href: '/payments', icon: DollarSign, labelKey: 'nav.payments' },
+  { href: '/calculations', icon: Calculator, labelKey: 'nav.calculations' },
+  { href: '/notifications', icon: Bell, labelKey: 'nav.notifications' },
 ] as const;
 
 export function MobileSidebar() {
   const pathname = usePathname();
   const { mobileSidebarOpen, setMobileSidebarOpen } = useUiStore();
+  const { t } = useI18n();
 
   if (!mobileSidebarOpen) return null;
 
@@ -43,17 +45,18 @@ export function MobileSidebar() {
           </div>
           <button
             onClick={() => setMobileSidebarOpen(false)}
-            aria-label="Close navigation"
+            aria-label={t('common.closeNavigation')}
             className="rounded-md p-1 text-muted-foreground hover:bg-accent"
           >
             <X className="h-5 w-5" />
           </button>
         </div>
 
-        <nav className="flex-1 overflow-y-auto p-2" aria-label="Mobile navigation">
+        <nav className="flex-1 overflow-y-auto p-2" aria-label={t('common.mobileNavigation')}>
           <ul className="space-y-0.5">
-            {NAV_ITEMS.map(({ href, icon: Icon, label }) => {
-              const isActive = href === '/' ? pathname === '/' : pathname.startsWith(href);
+            {NAV_ITEMS.map(({ href, icon: Icon, labelKey }) => {
+              const label = t(labelKey);
+              const isActive = pathname === href || (href !== '/dashboard' && pathname.startsWith(href));
               return (
                 <li key={href}>
                   <Link

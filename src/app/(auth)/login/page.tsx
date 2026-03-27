@@ -8,18 +8,23 @@ import { z } from 'zod';
 import { Eye, EyeOff, Loader2 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { APP_NAME } from '@/lib/constants';
+import { useI18n } from '@/lib/i18n/I18nProvider';
 
-const loginSchema = z.object({
-  username: z.string().min(1, 'Username is required'),
-  password: z.string().min(1, 'Password is required'),
-});
-
-type LoginFormValues = z.infer<typeof loginSchema>;
+type LoginFormValues = {
+  username: string;
+  password: string;
+};
 
 export default function LoginPage() {
+  const { t } = useI18n();
   const { login } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
+
+  const loginSchema = z.object({
+    username: z.string().min(1, t('pages.auth.login.usernameRequired')),
+    password: z.string().min(1, t('pages.auth.login.passwordRequired')),
+  });
 
   const {
     register,
@@ -32,7 +37,7 @@ export default function LoginPage() {
     try {
       await login(data);
     } catch (err) {
-      setServerError(err instanceof Error ? err.message : 'Invalid credentials');
+      setServerError(err instanceof Error ? err.message : t('pages.auth.login.invalidCredentials'));
     }
   };
 
@@ -45,7 +50,7 @@ export default function LoginPage() {
             L
           </div>
           <h1 className="text-2xl font-bold text-foreground">{APP_NAME}</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Sign in to your account</p>
+          <p className="mt-1 text-sm text-muted-foreground">{t('pages.auth.login.subtitle')}</p>
         </div>
 
         <form
@@ -65,7 +70,7 @@ export default function LoginPage() {
           {/* Username */}
           <div className="mb-4">
             <label htmlFor="username" className="mb-1.5 block text-sm font-medium text-foreground">
-              Username
+              {t('pages.auth.login.username')}
             </label>
             <input
               id="username"
@@ -74,7 +79,7 @@ export default function LoginPage() {
               aria-describedby={errors.username ? 'username-error' : undefined}
               {...register('username')}
               className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm outline-none placeholder:text-muted-foreground focus:ring-2 focus:ring-ring"
-              placeholder="Enter your username"
+              placeholder={t('pages.auth.login.usernamePlaceholder')}
             />
             {errors.username && (
               <p id="username-error" className="mt-1 text-xs text-destructive">
@@ -86,7 +91,7 @@ export default function LoginPage() {
           {/* Password */}
           <div className="mb-6">
             <label htmlFor="password" className="mb-1.5 block text-sm font-medium text-foreground">
-              Password
+              {t('pages.auth.login.password')}
             </label>
             <div className="relative">
               <input
@@ -96,12 +101,12 @@ export default function LoginPage() {
                 aria-describedby={errors.password ? 'password-error' : undefined}
                 {...register('password')}
                 className="h-10 w-full rounded-md border border-input bg-background px-3 pr-10 text-sm outline-none placeholder:text-muted-foreground focus:ring-2 focus:ring-ring"
-                placeholder="Enter your password"
+                placeholder={t('pages.auth.login.passwordPlaceholder')}
               />
               <button
                 type="button"
                 onClick={() => setShowPassword((v) => !v)}
-                aria-label={showPassword ? 'Hide password' : 'Show password'}
+                aria-label={showPassword ? t('pages.auth.login.hidePassword') : t('pages.auth.login.showPassword')}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
               >
                 {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -120,14 +125,14 @@ export default function LoginPage() {
             className="flex h-10 w-full items-center justify-center gap-2 rounded-md bg-primary text-sm font-medium text-white hover:bg-primary/90 disabled:opacity-60"
           >
             {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
-            {isSubmitting ? 'Signing in…' : 'Sign in'}
+            {isSubmitting ? t('pages.auth.login.signingIn') : t('pages.auth.login.signIn')}
           </button>
         </form>
 
         <p className="mt-4 text-center text-sm text-muted-foreground">
-          Don&apos;t have an account?{' '}
+          {t('pages.auth.login.noAccount')}{' '}
           <Link href="/register" className="font-medium text-primary hover:underline">
-            Register
+            {t('pages.auth.login.register')}
           </Link>
         </p>
       </div>

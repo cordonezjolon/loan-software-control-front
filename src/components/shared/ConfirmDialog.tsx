@@ -4,6 +4,7 @@ import React from 'react';
 import { AlertTriangle, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { LoadingSpinner } from './LoadingSpinner';
+import { useI18n } from '@/lib/i18n/I18nProvider';
 
 interface ConfirmDialogProps {
   open: boolean;
@@ -30,6 +31,8 @@ export function ConfirmDialog({
   onConfirm,
   onCancel,
 }: ConfirmDialogProps) {
+  const { t } = useI18n();
+
   if (!open) return null;
 
   return (
@@ -59,7 +62,7 @@ export function ConfirmDialog({
           </div>
           <button
             onClick={onCancel}
-            aria-label="Close dialog"
+            aria-label={t('common.closeDialog')}
             className="text-muted-foreground hover:text-foreground"
           >
             <X className="h-4 w-4" />

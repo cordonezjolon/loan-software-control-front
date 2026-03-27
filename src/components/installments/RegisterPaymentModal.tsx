@@ -10,18 +10,15 @@ import { PaymentMethod, PAYMENT_METHOD_LABELS } from '@/types/payment';
 import type { LoanInstallment } from '@/types/installment';
 import { formatCurrency, formatDate } from '@/lib/formatters';
 import { APP_CURRENCY } from '@/lib/constants';
+import { useI18n } from '@/lib/i18n/I18nProvider';
 
-const paymentSchema = z.object({
-  amount: z
-    .number({ error: 'Enter a valid amount' })
-    .min(0.01, `Amount must be at least ${formatCurrency(0.01)}`),
-  paymentMethod: z.nativeEnum(PaymentMethod),
-  paymentDate: z.string().min(1, 'Payment date is required'),
-  referenceNumber: z.string().max(100).optional(),
-  notes: z.string().max(500).optional(),
-});
-
-type PaymentFormValues = z.infer<typeof paymentSchema>;
+type PaymentFormValues = {
+  amount: number;
+  paymentMethod: PaymentMethod;
+  paymentDate: string;
+  referenceNumber?: string;
+  notes?: string;
+};
 
 interface RegisterPaymentModalProps {
   installment: LoanInstallment;
@@ -55,10 +52,21 @@ const inputCls =
   'h-10 w-full rounded-md border border-input bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring';
 
 export function RegisterPaymentModal({ installment, open, onClose }: RegisterPaymentModalProps) {
+  const { t } = useI18n();
   const createPayment = useCreatePayment();
   const [serverError, setServerError] = React.useState<string | null>(null);
 
   const totalDue = Number(installment.totalAmount) + Number(installment.lateFee);
+
+  const paymentSchema = z.object({
+    amount: z
+      .number({ error: t('pages.registerPayment.validAmount') })
+      .min(0.01, `${t('pages.registerPayment.minAmount')} ${formatCurrency(0.01)}`),
+    paymentMethod: z.nativeEnum(PaymentMethod),
+    paymentDate: z.string().min(1, t('pages.registerPayment.paymentDateRequired')),
+    referenceNumber: z.string().max(100).optional(),
+    notes: z.string().max(500).optional(),
+  });
 
   const {
     register,
@@ -97,7 +105,7 @@ export function RegisterPaymentModal({ installment, open, onClose }: RegisterPay
       });
       onClose();
     } catch (err) {
-      setServerError(err instanceof Error ? err.message : 'Failed to register payment. Please try again.');
+      setServerError(err instanceof Error ? err.message : t('pages.registerPayment.failedToRegister'));
     }
   };
 
@@ -112,9 +120,9 @@ export function RegisterPaymentModal({ installment, open, onClose }: RegisterPay
         {/* Header */}
         <div className="flex items-center justify-between border-b border-border px-6 py-4">
           <div>
-            <h2 className="text-base font-semibold text-foreground">Register Payment</h2>
+            <h2 className="text-base font-semibold text-foreground">{t('pages.registerPayment.title')}</h2>
             <p className="text-xs text-muted-foreground mt-0.5">
-              Installment #{installment.installmentNumber} — Due {formatDate(installment.dueDate)}
+              {`${t('pages.dashboard.installment')} #${installment.installmentNumber} — ${t('pages.dashboard.due')} ${formatDate(installment.dueDate)}`}
             </p>
           </div>
           <button
@@ -128,22 +136,22 @@ export function RegisterPaymentModal({ installment, open, onClose }: RegisterPay
         {/* Installment summary */}
         <div className="mx-6 mt-4 grid grid-cols-3 gap-2 rounded-lg bg-muted/50 p-3 text-center text-xs">
           <div>
-            <p className="text-muted-foreground">Principal</p>
+            <p className="text-muted-foreground">{t('pages.registerPayment.principal')}</p>
             <p className="font-semibold text-foreground">{formatCurrency(Number(installment.principalAmount))}</p>
           </div>
           <div>
-            <p className="text-muted-foreground">Interest</p>
+            <p className="text-muted-foreground">{t('pages.registerPayment.interest')}</p>
             <p className="font-semibold text-foreground">{formatCurrency(Number(installment.interestAmount))}</p>
           </div>
           <div>
-            <p className="text-muted-foreground">Total Due</p>
+            <p className="text-muted-foreground">{t('pages.registerPayment.totalDue')}</p>
             <p className="font-semibold text-primary">{formatCurrency(totalDue)}</p>
           </div>
         </div>
 
         {/* Form */}
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 px-6 py-5">
-          <Field label={`Amount (${APP_CURRENCY})`} id="amount" error={errors.amount?.message}>
+          <Field label={`${t('pages.registerPayment.amount')} (${APP_CURRENCY})`} id="amount" error={errors.amount?.message}>
             <input
               id="amount"
               type="number"
@@ -154,7 +162,7 @@ export function RegisterPaymentModal({ installment, open, onClose }: RegisterPay
             />
           </Field>
 
-          <Field label="Payment Method" id="paymentMethod" error={errors.paymentMethod?.message}>
+          <Field label={t('pages.registerPayment.paymentMethod')} id="paymentMethod" error={errors.paymentMethod?.message}>
             <select id="paymentMethod" className={inputCls} {...register('paymentMethod')}>
               {Object.values(PaymentMethod).map((method) => (
                 <option key={method} value={method}>
@@ -164,7 +172,7 @@ export function RegisterPaymentModal({ installment, open, onClose }: RegisterPay
             </select>
           </Field>
 
-          <Field label="Payment Date" id="paymentDate" error={errors.paymentDate?.message}>
+          <Field label={t('pages.registerPayment.paymentDate')} id="paymentDate" error={errors.paymentDate?.message}>
             <input
               id="paymentDate"
               type="date"
@@ -173,21 +181,21 @@ export function RegisterPaymentModal({ installment, open, onClose }: RegisterPay
             />
           </Field>
 
-          <Field label="Reference Number (optional)" id="referenceNumber" error={errors.referenceNumber?.message}>
+          <Field label={t('pages.registerPayment.referenceNumberOptional')} id="referenceNumber" error={errors.referenceNumber?.message}>
             <input
               id="referenceNumber"
               type="text"
-              placeholder="TXN123456, cheque #, etc."
+              placeholder={t('pages.registerPayment.referencePlaceholder')}
               className={inputCls}
               {...register('referenceNumber')}
             />
           </Field>
 
-          <Field label="Notes (optional)" id="notes" error={errors.notes?.message}>
+          <Field label={t('pages.registerPayment.notesOptional')} id="notes" error={errors.notes?.message}>
             <textarea
               id="notes"
               rows={2}
-              placeholder="Additional notes…"
+              placeholder={t('pages.registerPayment.notesPlaceholder')}
               className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring resize-none"
               {...register('notes')}
             />
@@ -203,7 +211,7 @@ export function RegisterPaymentModal({ installment, open, onClose }: RegisterPay
               onClick={onClose}
               className="flex-1 rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-foreground hover:bg-muted"
             >
-              Cancel
+              {t('pages.registerPayment.cancel')}
             </button>
             <button
               type="submit"
@@ -211,7 +219,7 @@ export function RegisterPaymentModal({ installment, open, onClose }: RegisterPay
               className="flex-1 inline-flex items-center justify-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
             >
               {(isSubmitting || createPayment.isPending) && <Loader2 className="h-4 w-4 animate-spin" />}
-              Register Payment
+              {t('pages.registerPayment.registerPayment')}
             </button>
           </div>
         </form>
