@@ -9,6 +9,7 @@ interface ConfirmDialogProps {
   open: boolean;
   title: string;
   description: string;
+  errorMessage?: string;
   confirmLabel?: string;
   cancelLabel?: string;
   variant?: 'danger' | 'default';
@@ -21,6 +22,7 @@ export function ConfirmDialog({
   open,
   title,
   description,
+  errorMessage,
   confirmLabel = 'Confirm',
   cancelLabel = 'Cancel',
   variant = 'default',
@@ -49,6 +51,11 @@ export function ConfirmDialog({
               {title}
             </h2>
             <p className="mt-1 text-sm text-muted-foreground">{description}</p>
+            {errorMessage && (
+              <p className="mt-2 rounded-md bg-destructive/10 px-2 py-1 text-sm text-destructive">
+                {errorMessage}
+              </p>
+            )}
           </div>
           <button
             onClick={onCancel}

@@ -10,7 +10,7 @@ import { createLoanSchema, type CreateLoanFormValues } from '@/lib/schemas/loan.
 import { useCreateLoan } from '@/hooks/useLoans';
 import { useEligibleClients } from '@/hooks/useClients';
 import { LoanType, LoanPurpose } from '@/types/loan';
-import { LOAN_TYPE_LABELS, LOAN_PURPOSE_LABELS } from '@/lib/constants';
+import { APP_CURRENCY, LOAN_TYPE_LABELS, LOAN_PURPOSE_LABELS } from '@/lib/constants';
 
 const inputCls =
   'h-10 w-full rounded-md border border-input bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring';
@@ -105,7 +105,7 @@ export default function NewLoanPage() {
         </div>
 
         <div className="grid grid-cols-2 gap-4">
-          <Field label="Principal ($)" id="principal" error={errors.principal?.message}>
+          <Field label={`Principal (${APP_CURRENCY})`} id="principal" error={errors.principal?.message}>
             <input
               id="principal"
               type="number"
@@ -149,7 +149,7 @@ export default function NewLoanPage() {
         </div>
 
         <div className="grid grid-cols-2 gap-4">
-          <Field label="Down Payment ($, optional)" id="downPayment" error={errors.downPayment?.message}>
+          <Field label={`Down Payment (${APP_CURRENCY}, optional)`} id="downPayment" error={errors.downPayment?.message}>
             <input
               id="downPayment"
               type="number"

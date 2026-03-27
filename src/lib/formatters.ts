@@ -1,12 +1,13 @@
 import { formatDistanceToNow, format, parseISO } from 'date-fns';
+import { APP_CURRENCY, APP_LOCALE } from './constants';
 
-export const formatCurrency = (value: number, currency = 'USD'): string =>
-  new Intl.NumberFormat('en-US', { style: 'currency', currency, minimumFractionDigits: 2 }).format(
+export const formatCurrency = (value: number, currency = APP_CURRENCY): string =>
+  new Intl.NumberFormat(APP_LOCALE, { style: 'currency', currency, minimumFractionDigits: 2 }).format(
     value,
   );
 
 export const formatPercent = (value: number): string =>
-  new Intl.NumberFormat('en-US', {
+  new Intl.NumberFormat(APP_LOCALE, {
     style: 'percent',
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,

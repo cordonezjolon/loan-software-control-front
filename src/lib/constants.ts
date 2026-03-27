@@ -118,3 +118,58 @@ export const NOTIFICATION_CATEGORY_LABELS: Record<NotificationCategory, string> 
 };
 
 export const APP_NAME = process.env.NEXT_PUBLIC_APP_NAME ?? 'Loan Management';
+
+/**
+ * ISO 4217 currency code used throughout the app.
+ * Change this to your local currency (e.g. 'EUR', 'GBP', 'COP', 'MXN', 'BRL').
+ */
+export const APP_CURRENCY = process.env.NEXT_PUBLIC_CURRENCY ?? 'USD';
+
+/**
+ * BCP 47 locale tag used for number / currency formatting.
+ * Examples: 'es-CO' (Colombia), 'es-MX' (Mexico), 'pt-BR' (Brazil), 'en-GB' (UK).
+ */
+export const APP_LOCALE = process.env.NEXT_PUBLIC_LOCALE ?? 'en-US';
+
+// ─── Pagination ─────────────────────────────────────────────────────────────
+
+/** Default page size for main list pages (loans, clients). */
+export const PAGE_SIZE = 10;
+
+/** Larger page size for detail-heavy list pages (installments, payments). */
+export const PAGE_SIZE_LIST = 15;
+
+// ─── Debounce delays (ms) ────────────────────────────────────────────────────
+
+/** Standard search-input debounce used on loans and clients pages. */
+export const DEBOUNCE_DELAY = 400;
+
+/** Shorter debounce for the inline client autocomplete search. */
+export const DEBOUNCE_CLIENT_SEARCH = 300;
+
+// ─── TanStack Query cache times (ms) ─────────────────────────────────────────
+
+/** Default staleTime for list/entity queries (30 seconds). */
+export const QUERY_STALE_TIME = 30_000;
+
+/** Longer staleTime for aggregated statistics queries (60 seconds). */
+export const QUERY_STALE_TIME_STATS = 60_000;
+
+/** Zero staleTime — always refetch (used for live calculations). */
+export const QUERY_STALE_REALTIME = 0;
+
+// ─── Credit Score Thresholds ─────────────────────────────────────────────────
+
+/** Minimum score considered "Good" (green). */
+export const CREDIT_SCORE_GOOD = 700;
+
+/** Minimum score considered "Fair" (yellow). Scores below this are "Poor" (red). */
+export const CREDIT_SCORE_FAIR = 600;
+
+// ─── Date filter presets ──────────────────────────────────────────────────────
+
+/** Default date preset applied when installments / payments pages first load. */
+export const DEFAULT_DATE_PRESET = 'thisMonth' as const;
+
+/** Number of days used by the "Next N days" installment and upcoming-payments filters. */
+export const NEXT_DAYS_RANGE = 30;

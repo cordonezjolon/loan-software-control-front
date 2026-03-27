@@ -9,9 +9,12 @@ import { useCreatePayment } from '@/hooks/usePayments';
 import { PaymentMethod, PAYMENT_METHOD_LABELS } from '@/types/payment';
 import type { LoanInstallment } from '@/types/installment';
 import { formatCurrency, formatDate } from '@/lib/formatters';
+import { APP_CURRENCY } from '@/lib/constants';
 
 const paymentSchema = z.object({
-  amount: z.number({ error: 'Enter a valid amount' }).min(0.01, 'Amount must be at least $0.01'),
+  amount: z
+    .number({ error: 'Enter a valid amount' })
+    .min(0.01, `Amount must be at least ${formatCurrency(0.01)}`),
   paymentMethod: z.nativeEnum(PaymentMethod),
   paymentDate: z.string().min(1, 'Payment date is required'),
   referenceNumber: z.string().max(100).optional(),
@@ -140,7 +143,7 @@ export function RegisterPaymentModal({ installment, open, onClose }: RegisterPay
 
         {/* Form */}
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 px-6 py-5">
-          <Field label="Amount ($)" id="amount" error={errors.amount?.message}>
+          <Field label={`Amount (${APP_CURRENCY})`} id="amount" error={errors.amount?.message}>
             <input
               id="amount"
               type="number"

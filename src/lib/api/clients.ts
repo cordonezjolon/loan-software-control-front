@@ -3,6 +3,7 @@ import type { PaginatedResponse, PaginationParams } from '@/types/api';
 import type { Client, ClientStats, CreateClientDto, RiskProfile, UpdateClientDto } from '@/types/client';
 
 export interface ClientsQuery extends PaginationParams {
+  [key: string]: unknown;
   search?: string;
   minCreditScore?: number;
   minMonthlyIncome?: number;

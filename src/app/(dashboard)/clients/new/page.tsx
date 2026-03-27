@@ -8,6 +8,7 @@ import { ArrowLeft, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { createClientSchema, type CreateClientFormValues } from '@/lib/schemas/client.schema';
 import { useCreateClient } from '@/hooks/useClients';
+import { APP_CURRENCY } from '@/lib/constants';
 
 function Field({
   label,
@@ -128,7 +129,7 @@ export default function NewClientPage() {
         <div className="border-t border-border pt-4">
           <p className="mb-3 text-sm font-semibold text-foreground">Financial Information (optional)</p>
           <div className="grid grid-cols-2 gap-4">
-            <Field label="Monthly Income ($)" id="monthlyIncome" error={errors.monthlyIncome?.message}>
+            <Field label={`Monthly Income (${APP_CURRENCY})`} id="monthlyIncome" error={errors.monthlyIncome?.message}>
               <input
                 id="monthlyIncome"
                 type="number"

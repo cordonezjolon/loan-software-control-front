@@ -17,6 +17,7 @@ import { Calculator, RefreshCw } from 'lucide-react';
 import { loanCalculationSchema, type LoanCalculationFormValues } from '@/lib/schemas/loan.schema';
 import { useCalculateLoanMutation } from '@/hooks/useCalculations';
 import { formatCurrency, formatMonths } from '@/lib/formatters';
+import { APP_CURRENCY } from '@/lib/constants';
 import { useDebounce } from '@/hooks/useDebounce';
 import type { AmortizationEntry } from '@/types/loan';
 
@@ -90,7 +91,7 @@ export default function CalculationsPage() {
         <div className="rounded-xl border border-border bg-card p-5 shadow-card">
           <h2 className="mb-4 text-sm font-semibold text-foreground">Loan Parameters</h2>
           <form onSubmit={handleSubmit((d) => calculateMutation.mutate(d))} noValidate className="space-y-4">
-            <Field label="Principal ($)" id="principal" error={errors.principal?.message}>
+            <Field label={`Principal (${APP_CURRENCY})`} id="principal" error={errors.principal?.message}>
               <input
                 id="principal"
                 type="number"
@@ -172,7 +173,7 @@ export default function CalculationsPage() {
                     <XAxis dataKey="month" tick={{ fontSize: 11 }} label={{ value: 'Month', position: 'insideBottom', offset: -2, fontSize: 11 }} />
                     <YAxis
                       tick={{ fontSize: 11 }}
-                      tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`}
+                      tickFormatter={(v) => `${formatCurrency(Number(v)).replace(/\.00$/, '')}`}
                     />
                     <Tooltip
                       formatter={(v) => [formatCurrency(Number(v)), '']}

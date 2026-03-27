@@ -5,6 +5,23 @@ export enum InstallmentStatus {
   Partial = 'partial',
 }
 
+/** Partial client info returned inside installment relations */
+export interface InstallmentClient {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phoneNumber?: string;
+}
+
+/** Partial loan info returned inside installment relations */
+export interface InstallmentLoan {
+  id: string;
+  loanType: string;
+  principal: number;
+  client?: InstallmentClient;
+}
+
 export interface LoanInstallment {
   id: string;
   installmentNumber: number;
@@ -16,6 +33,8 @@ export interface LoanInstallment {
   lateFee: number;
   status: InstallmentStatus;
   payments: string[];
+  /** Populated when fetched via findAll or findOne */
+  loan?: InstallmentLoan;
   createdAt: string;
   updatedAt: string;
 }

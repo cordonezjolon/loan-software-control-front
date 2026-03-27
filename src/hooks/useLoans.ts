@@ -3,6 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { loansApi, type LoansQuery } from '@/lib/api/loans';
 import type { CreateLoanDto, UpdateLoanDto } from '@/types/loan';
+import { QUERY_STALE_TIME, QUERY_STALE_TIME_STATS } from '@/lib/constants';
 
 export const LOANS_KEY = 'loans';
 
@@ -10,7 +11,7 @@ export function useLoans(params?: LoansQuery) {
   return useQuery({
     queryKey: [LOANS_KEY, params],
     queryFn: () => loansApi.findAll(params),
-    staleTime: 30_000,
+    staleTime: QUERY_STALE_TIME,
   });
 }
 
@@ -26,7 +27,7 @@ export function useLoanStatistics(loanOfficerId?: string) {
   return useQuery({
     queryKey: [LOANS_KEY, 'statistics', loanOfficerId],
     queryFn: () => loansApi.getStatistics(loanOfficerId),
-    staleTime: 60_000,
+    staleTime: QUERY_STALE_TIME_STATS,
   });
 }
 

@@ -9,6 +9,11 @@ export interface PaymentsQuery extends PaginationParams {
   clientId?: string;
   status?: PaymentStatus;
   paymentMethod?: PaymentMethod;
+  paymentDateFrom?: string;
+  paymentDateTo?: string;
+  minAmount?: number;
+  maxAmount?: number;
+  search?: string;
 }
 
 export const paymentsApi = {

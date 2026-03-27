@@ -3,6 +3,7 @@
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { calculationsApi } from '@/lib/api/loans';
 import type { LoanCalculationDto, EarlyPayoffCalculationDto, PaymentSchedulePreviewParams } from '@/types/loan';
+import { QUERY_STALE_REALTIME } from '@/lib/constants';
 
 export const CALCULATIONS_KEY = 'calculations';
 
@@ -11,7 +12,7 @@ export function useCalculateLoan(dto: LoanCalculationDto | null) {
     queryKey: [CALCULATIONS_KEY, dto],
     queryFn: () => calculationsApi.calculate(dto!),
     enabled: dto !== null,
-    staleTime: 0,
+    staleTime: QUERY_STALE_REALTIME,
   });
 }
 
@@ -32,6 +33,6 @@ export function usePaymentSchedulePreview(params: PaymentSchedulePreviewParams |
     queryKey: [CALCULATIONS_KEY, 'preview', params],
     queryFn: () => calculationsApi.previewSchedule(params!),
     enabled: params !== null,
-    staleTime: 0,
+    staleTime: QUERY_STALE_REALTIME,
   });
 }

@@ -3,6 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { clientsApi, type ClientsQuery } from '@/lib/api/clients';
 import type { CreateClientDto, UpdateClientDto } from '@/types/client';
+import { QUERY_STALE_TIME, QUERY_STALE_TIME_STATS } from '@/lib/constants';
 
 export const CLIENTS_KEY = 'clients';
 
@@ -10,7 +11,7 @@ export function useClients(params?: ClientsQuery) {
   return useQuery({
     queryKey: [CLIENTS_KEY, params],
     queryFn: () => clientsApi.findAll(params),
-    staleTime: 30_000,
+    staleTime: QUERY_STALE_TIME,
   });
 }
 
@@ -26,7 +27,7 @@ export function useClientStats() {
   return useQuery({
     queryKey: [CLIENTS_KEY, 'stats'],
     queryFn: () => clientsApi.getStats(),
-    staleTime: 60_000,
+    staleTime: QUERY_STALE_TIME_STATS,
   });
 }
 
@@ -34,7 +35,7 @@ export function useEligibleClients() {
   return useQuery({
     queryKey: [CLIENTS_KEY, 'eligible'],
     queryFn: () => clientsApi.getEligible(),
-    staleTime: 30_000,
+    staleTime: QUERY_STALE_TIME,
   });
 }
 

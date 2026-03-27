@@ -6,14 +6,14 @@ import { useRouter } from 'next/navigation';
 import { Plus } from 'lucide-react';
 import { useLoans, useApproveLoan, useRejectLoan, useActivateLoan, useDeleteLoan } from '@/hooks/useLoans';
 import { DataTable } from '@/components/shared/DataTable';
-import { SearchInput } from '@/components/shared/SearchInput';
+import { ClientSearch } from '@/components/shared/ClientSearch';
 import { Pagination } from '@/components/shared/Pagination';
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog';
 import { LoanStatusBadge } from '@/components/loans/LoanStatusBadge';
 import { CurrencyDisplay } from '@/components/shared/CurrencyDisplay';
 import { DateDisplay } from '@/components/shared/DateDisplay';
-import { useDebounce } from '@/hooks/useDebounce';
-import { LOAN_TYPE_LABELS, LOAN_STATUS_CONFIG } from '@/lib/constants';
+import { LOAN_TYPE_LABELS, LOAN_STATUS_CONFIG, PAGE_SIZE } from '@/lib/constants';
+import { ApiError } from '@/lib/api/client';
 import { LoanStatus } from '@/types/loan';
 import type { Loan } from '@/types/loan';
 
@@ -24,18 +24,20 @@ const STATUS_OPTIONS = [
 
 export default function LoansPage() {
   const router = useRouter();
-  const [search, setSearch] = useState('');
+  const [clientId, setClientId] = useState('');
+  const [clientLabel, setClientLabel] = useState('');
   const [status, setStatus] = useState('');
   const [page, setPage] = useState(1);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [rejectId, setRejectId] = useState<string | null>(null);
-  const debouncedSearch = useDebounce(search, 400);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [rejectError, setRejectError] = useState<string | null>(null);
 
   const { data, isLoading } = useLoans({
-    search: debouncedSearch || undefined,
+    clientId: clientId || undefined,
     status: (status as LoanStatus) || undefined,
     page,
-    limit: 10,
+    limit: PAGE_SIZE,
     sortBy: 'createdAt',
     sortOrder: 'DESC',
   });
@@ -122,7 +124,7 @@ export default function LoansPage() {
             </button>
           )}
           <button
-            onClick={(e) => { e.stopPropagation(); setDeleteId(row.id); }}
+            onClick={(e) => { e.stopPropagation(); setDeleteId(row.id); setDeleteError(null); }}
             className="text-xs font-medium text-destructive hover:underline"
           >
             Delete
@@ -149,11 +151,12 @@ export default function LoansPage() {
       </div>
 
       <div className="flex flex-wrap items-center gap-3">
-        <SearchInput
-          value={search}
-          onChange={(v) => { setSearch(v); setPage(1); }}
-          placeholder="Search loans…"
-          className="max-w-xs"
+        <ClientSearch
+          selectedId={clientId}
+          selectedLabel={clientLabel}
+          onSelect={(id, name) => { setClientId(id); setClientLabel(name); setPage(1); }}
+          onClear={() => { setClientId(''); setClientLabel(''); setPage(1); }}
+          className="w-80"
         />
         <select
           value={status}
@@ -185,26 +188,58 @@ export default function LoansPage() {
         open={deleteId !== null}
         title="Delete Loan"
         description="Are you sure you want to delete this loan? This will also remove all installments."
+        errorMessage={deleteError ?? undefined}
         confirmLabel="Delete"
         variant="danger"
         isLoading={deleteLoan.isPending}
         onConfirm={async () => {
-          if (deleteId) { await deleteLoan.mutateAsync(deleteId); setDeleteId(null); }
+          if (deleteId) {
+            try {
+              await deleteLoan.mutateAsync(deleteId);
+              setDeleteError(null);
+              setDeleteId(null);
+            } catch (error) {
+              if (error instanceof ApiError) {
+                setDeleteError(error.message);
+                return;
+              }
+              setDeleteError('Unable to delete loan. Please try again.');
+            }
+          }
         }}
-        onCancel={() => setDeleteId(null)}
+        onCancel={() => {
+          setDeleteId(null);
+          setDeleteError(null);
+        }}
       />
 
       <ConfirmDialog
         open={rejectId !== null}
         title="Reject Loan"
         description="Are you sure you want to reject this loan application?"
+        errorMessage={rejectError ?? undefined}
         confirmLabel="Reject"
         variant="danger"
         isLoading={rejectLoan.isPending}
         onConfirm={async () => {
-          if (rejectId) { await rejectLoan.mutateAsync({ id: rejectId, reason: 'Rejected by officer' }); setRejectId(null); }
+          if (rejectId) {
+            try {
+              await rejectLoan.mutateAsync({ id: rejectId, reason: 'Rejected by officer' });
+              setRejectError(null);
+              setRejectId(null);
+            } catch (error) {
+              if (error instanceof ApiError) {
+                setRejectError(error.message);
+                return;
+              }
+              setRejectError('Unable to reject loan. Please try again.');
+            }
+          }
         }}
-        onCancel={() => setRejectId(null)}
+        onCancel={() => {
+          setRejectId(null);
+          setRejectError(null);
+        }}
       />
     </div>
   );

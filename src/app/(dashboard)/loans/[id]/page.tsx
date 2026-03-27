@@ -13,6 +13,7 @@ import { DateDisplay } from '@/components/shared/DateDisplay';
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog';
 import { PageLoader } from '@/components/shared/LoadingSpinner';
 import { LOAN_TYPE_LABELS, LOAN_PURPOSE_LABELS } from '@/lib/constants';
+import { ApiError } from '@/lib/api/client';
 import { LoanStatus } from '@/types/loan';
 
 export default function LoanDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -24,6 +25,7 @@ export default function LoanDetailPage({ params }: { params: Promise<{ id: strin
   const activateLoan = useActivateLoan();
 
   const [confirmAction, setConfirmAction] = useState<'approve' | 'reject' | 'activate' | null>(null);
+  const [confirmError, setConfirmError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'details' | 'schedule'>('details');
 
   if (isLoading) return <PageLoader />;
@@ -35,10 +37,19 @@ export default function LoanDetailPage({ params }: { params: Promise<{ id: strin
   const progressPct = loan.totalAmount > 0 ? Math.min((paidAmount / loan.totalAmount) * 100, 100) : 0;
 
   const handleAction = async () => {
-    if (confirmAction === 'approve') await approveLoan.mutateAsync(id);
-    if (confirmAction === 'reject') await rejectLoan.mutateAsync({ id, reason: 'Rejected by officer' });
-    if (confirmAction === 'activate') await activateLoan.mutateAsync(id);
-    setConfirmAction(null);
+    try {
+      if (confirmAction === 'approve') await approveLoan.mutateAsync(id);
+      if (confirmAction === 'reject') await rejectLoan.mutateAsync({ id, reason: 'Rejected by officer' });
+      if (confirmAction === 'activate') await activateLoan.mutateAsync(id);
+      setConfirmError(null);
+      setConfirmAction(null);
+    } catch (error) {
+      if (error instanceof ApiError) {
+        setConfirmError(error.message);
+        return;
+      }
+      setConfirmError('Unable to complete this action. Please try again.');
+    }
   };
 
   const actionConfig = {
@@ -58,14 +69,14 @@ export default function LoanDetailPage({ params }: { params: Promise<{ id: strin
           {loan.status === LoanStatus.Pending && (
             <>
               <button
-                onClick={() => setConfirmAction('approve')}
+                onClick={() => { setConfirmAction('approve'); setConfirmError(null); }}
                 className="flex items-center gap-1.5 rounded-md bg-green-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-green-700"
               >
                 <CheckCircle className="h-3.5 w-3.5" />
                 Approve
               </button>
               <button
-                onClick={() => setConfirmAction('reject')}
+                onClick={() => { setConfirmAction('reject'); setConfirmError(null); }}
                 className="flex items-center gap-1.5 rounded-md border border-destructive px-3 py-1.5 text-xs font-medium text-destructive hover:bg-destructive/10"
               >
                 <XCircle className="h-3.5 w-3.5" />
@@ -75,7 +86,7 @@ export default function LoanDetailPage({ params }: { params: Promise<{ id: strin
           )}
           {loan.status === LoanStatus.Approved && (
             <button
-              onClick={() => setConfirmAction('activate')}
+              onClick={() => { setConfirmAction('activate'); setConfirmError(null); }}
               className="flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-white hover:bg-primary/90"
             >
               <Zap className="h-3.5 w-3.5" />
@@ -235,11 +246,15 @@ export default function LoanDetailPage({ params }: { params: Promise<{ id: strin
           open
           title={actionConfig[confirmAction].title}
           description={actionConfig[confirmAction].description}
+          errorMessage={confirmError ?? undefined}
           confirmLabel={actionConfig[confirmAction].label}
           variant={actionConfig[confirmAction].variant}
           isLoading={approveLoan.isPending || rejectLoan.isPending || activateLoan.isPending}
           onConfirm={handleAction}
-          onCancel={() => setConfirmAction(null)}
+          onCancel={() => {
+            setConfirmAction(null);
+            setConfirmError(null);
+          }}
         />
       )}
     </div>

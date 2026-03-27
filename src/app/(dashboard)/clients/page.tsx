@@ -3,27 +3,28 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Plus, UserPlus } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { useClients, useDeleteClient } from '@/hooks/useClients';
 import { DataTable } from '@/components/shared/DataTable';
-import { SearchInput } from '@/components/shared/SearchInput';
+import { ClientSearch } from '@/components/shared/ClientSearch';
 import { Pagination } from '@/components/shared/Pagination';
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog';
-import { useDebounce } from '@/hooks/useDebounce';
 import { formatCurrency } from '@/lib/formatters';
+import { PAGE_SIZE, CREDIT_SCORE_GOOD, CREDIT_SCORE_FAIR } from '@/lib/constants';
 import type { Client } from '@/types/client';
+import { ApiError } from '@/lib/api/client';
 
 export default function ClientsPage() {
   const router = useRouter();
-  const [search, setSearch] = useState('');
+  const [clientId, setClientId] = useState('');
+  const [clientLabel, setClientLabel] = useState('');
   const [page, setPage] = useState(1);
   const [deleteId, setDeleteId] = useState<string | null>(null);
-  const debouncedSearch = useDebounce(search, 400);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const { data, isLoading } = useClients({
-    search: debouncedSearch || undefined,
     page,
-    limit: 10,
+    limit: PAGE_SIZE,
   });
 
   const deleteClient = useDeleteClient();
@@ -47,9 +48,9 @@ export default function ClientsPage() {
         row.creditScore ? (
           <span
             className={
-              row.creditScore >= 700
+              row.creditScore >= CREDIT_SCORE_GOOD
                 ? 'text-green-600'
-                : row.creditScore >= 600
+                : row.creditScore >= CREDIT_SCORE_FAIR
                   ? 'text-yellow-600'
                   : 'text-red-600'
             }
@@ -99,6 +100,7 @@ export default function ClientsPage() {
             onClick={(e) => {
               e.stopPropagation();
               setDeleteId(row.id);
+              setDeleteError(null);
             }}
             className="text-xs text-destructive hover:underline"
           >
@@ -128,11 +130,16 @@ export default function ClientsPage() {
       </div>
 
       <div className="flex items-center gap-3">
-        <SearchInput
-          value={search}
-          onChange={(v) => { setSearch(v); setPage(1); }}
-          placeholder="Search clients…"
-          className="max-w-xs"
+        <ClientSearch
+          selectedId={clientId}
+          selectedLabel={clientLabel}
+          onSelect={(id, name) => {
+            setClientId(id);
+            setClientLabel(name);
+            router.push(`/clients/${id}`);
+          }}
+          onClear={() => { setClientId(''); setClientLabel(''); setPage(1); }}
+          className="w-80"
         />
       </div>
 
@@ -157,16 +164,29 @@ export default function ClientsPage() {
         open={deleteId !== null}
         title="Delete Client"
         description="Are you sure you want to delete this client? This action cannot be undone."
+        errorMessage={deleteError ?? undefined}
         confirmLabel="Delete"
         variant="danger"
         isLoading={deleteClient.isPending}
         onConfirm={async () => {
           if (deleteId) {
-            await deleteClient.mutateAsync(deleteId);
-            setDeleteId(null);
+            try {
+              await deleteClient.mutateAsync(deleteId);
+              setDeleteError(null);
+              setDeleteId(null);
+            } catch (error) {
+              if (error instanceof ApiError) {
+                setDeleteError(error.message);
+                return;
+              }
+              setDeleteError('Unable to delete client. Please try again.');
+            }
           }
         }}
-        onCancel={() => setDeleteId(null)}
+        onCancel={() => {
+          setDeleteId(null);
+          setDeleteError(null);
+        }}
       />
     </div>
   );

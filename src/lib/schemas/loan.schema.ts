@@ -1,12 +1,13 @@
 import { z } from 'zod';
 import { LoanType, LoanPurpose } from '@/types/loan';
+import { formatCurrency } from '@/lib/formatters';
 
 export const createLoanSchema = z.object({
   clientId: z.string().uuid('Invalid client ID'),
   principal: z
     .number()
-    .min(1000, 'Minimum $1,000')
-    .max(5_000_000, 'Maximum $5,000,000'),
+    .min(1000, `Minimum ${formatCurrency(1000)}`)
+    .max(5_000_000, `Maximum ${formatCurrency(5_000_000)}`),
   interestRate: z
     .number()
     .min(0.001, 'Minimum 0.1%')
@@ -33,8 +34,8 @@ export type UpdateLoanFormValues = z.infer<typeof updateLoanSchema>;
 export const loanCalculationSchema = z.object({
   principal: z
     .number()
-    .min(1000, 'Minimum $1,000')
-    .max(10_000_000, 'Maximum $10,000,000'),
+    .min(1000, `Minimum ${formatCurrency(1000)}`)
+    .max(10_000_000, `Maximum ${formatCurrency(10_000_000)}`),
   interestRate: z
     .number()
     .min(0.001, 'Minimum 0.1%')
