@@ -1,6 +1,15 @@
 import { api } from './client';
 import type { PaginatedResponse, PaginationParams } from '@/types/api';
-import type { LoanPayment, CreatePaymentDto, PaymentMethod, PaymentStatus } from '@/types/payment';
+import type {
+  AdvancePaymentResult,
+  CreateAdvancePaymentDto,
+  CreatePaymentDto,
+  CreatePrepaymentDto,
+  LoanPayment,
+  PaymentMethod,
+  PaymentStatus,
+  PrepaymentResultDto,
+} from '@/types/payment';
 
 export interface PaymentsQuery extends PaginationParams {
   [key: string]: unknown;
@@ -19,6 +28,12 @@ export interface PaymentsQuery extends PaginationParams {
 export const paymentsApi = {
   create: (dto: CreatePaymentDto): Promise<LoanPayment> =>
     api.post<LoanPayment>('/payments', dto),
+
+  createAdvancePayment: (dto: CreateAdvancePaymentDto): Promise<AdvancePaymentResult> =>
+    api.post<AdvancePaymentResult>('/payments/advance', dto),
+
+  createPrepayment: (dto: CreatePrepaymentDto): Promise<PrepaymentResultDto> =>
+    api.post<PrepaymentResultDto>('/payments/prepayment', dto),
 
   findAll: (params?: PaymentsQuery): Promise<PaginatedResponse<LoanPayment>> =>
     api.get<PaginatedResponse<LoanPayment>>('/payments', { params }),

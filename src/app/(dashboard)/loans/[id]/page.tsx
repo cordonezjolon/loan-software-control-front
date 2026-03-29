@@ -3,18 +3,20 @@
 import React, { useState } from 'react';
 import { use } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, CheckCircle, XCircle, Zap, TrendingDown } from 'lucide-react';
+import { ArrowLeft, CheckCircle, XCircle, Zap, TrendingDown, ShieldCheck } from 'lucide-react';
 import { useLoan, useApproveLoan, useRejectLoan, useActivateLoan } from '@/hooks/useLoans';
 import { useInstallmentsByLoan } from '@/hooks/useInstallments';
 import { LoanStatusBadge } from '@/components/loans/LoanStatusBadge';
 import { InstallmentStatusBadge } from '@/components/installments/InstallmentStatusBadge';
+import { EarlySettlementModal } from '@/components/loans/EarlySettlementModal';
+import { PrepaymentModal } from '@/components/loans/PrepaymentModal';
 import { CurrencyDisplay } from '@/components/shared/CurrencyDisplay';
 import { DateDisplay } from '@/components/shared/DateDisplay';
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog';
 import { PageLoader } from '@/components/shared/LoadingSpinner';
-import { LOAN_TYPE_LABELS, LOAN_PURPOSE_LABELS } from '@/lib/constants';
+import { LOAN_TYPE_LABELS, LOAN_PURPOSE_LABELS, INTEREST_CALCULATION_METHOD_LABELS } from '@/lib/constants';
 import { ApiError } from '@/lib/api/client';
-import { LoanStatus } from '@/types/loan';
+import { LoanStatus, InterestCalculationMethod } from '@/types/loan';
 
 export default function LoanDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -27,6 +29,8 @@ export default function LoanDetailPage({ params }: { params: Promise<{ id: strin
   const [confirmAction, setConfirmAction] = useState<'approve' | 'reject' | 'activate' | null>(null);
   const [confirmError, setConfirmError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'details' | 'schedule'>('details');
+  const [showSettlementModal, setShowSettlementModal] = useState(false);
+  const [showPrepaymentModal, setShowPrepaymentModal] = useState(false);
 
   if (isLoading) return <PageLoader />;
   if (!loan) return <p className="text-muted-foreground">Loan not found.</p>;
@@ -93,6 +97,26 @@ export default function LoanDetailPage({ params }: { params: Promise<{ id: strin
               Activate
             </button>
           )}
+          {loan.status === LoanStatus.Active &&
+            loan.interestCalculationMethod === InterestCalculationMethod.FlatRate && (
+              <button
+                onClick={() => setShowSettlementModal(true)}
+                className="flex items-center gap-1.5 rounded-md bg-amber-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-amber-700"
+              >
+                <ShieldCheck className="h-3.5 w-3.5" />
+                Early Settlement
+              </button>
+            )}
+          {loan.status === LoanStatus.Active &&
+            loan.interestCalculationMethod === InterestCalculationMethod.DecliningBalance && (
+              <button
+                onClick={() => setShowPrepaymentModal(true)}
+                className="flex items-center gap-1.5 rounded-md border border-primary px-3 py-1.5 text-xs font-medium text-primary hover:bg-primary/10"
+              >
+                <TrendingDown className="h-3.5 w-3.5" />
+                Prepayment
+              </button>
+            )}
         </div>
       </div>
 
@@ -184,6 +208,13 @@ export default function LoanDetailPage({ params }: { params: Promise<{ id: strin
                 { label: 'End Date', value: <DateDisplay value={loan.endDate} /> },
                 { label: 'Created', value: <DateDisplay value={loan.createdAt} withTime /> },
                 { label: 'Updated', value: <DateDisplay value={loan.updatedAt} withTime /> },
+                {
+                  label: 'Interest Method',
+                  value: INTEREST_CALCULATION_METHOD_LABELS[loan.interestCalculationMethod] ?? loan.interestCalculationMethod,
+                },
+                ...(loan.earlySettlementRebatePercentage != null
+                  ? [{ label: 'Settlement Rebate', value: `${(loan.earlySettlementRebatePercentage * 100).toFixed(0)}%` }]
+                  : []),
                 ...(loan.riskAdjustment ? [{ label: 'Risk Adjustment', value: `${(loan.riskAdjustment * 100).toFixed(2)}%` }] : []),
                 ...(loan.downPayment ? [{ label: 'Down Payment', value: <CurrencyDisplay value={loan.downPayment} /> }] : []),
               ].map(({ label, value }) => (
@@ -255,6 +286,22 @@ export default function LoanDetailPage({ params }: { params: Promise<{ id: strin
             setConfirmAction(null);
             setConfirmError(null);
           }}
+        />
+      )}
+
+      {showSettlementModal && (
+        <EarlySettlementModal
+          loanId={id}
+          open={showSettlementModal}
+          onClose={() => setShowSettlementModal(false)}
+        />
+      )}
+
+      {showPrepaymentModal && loan && (
+        <PrepaymentModal
+          loan={loan}
+          open={showPrepaymentModal}
+          onClose={() => setShowPrepaymentModal(false)}
         />
       )}
     </div>

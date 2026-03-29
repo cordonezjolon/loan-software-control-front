@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { LoanType, LoanPurpose } from '@/types/loan';
+import { LoanType, LoanPurpose, InterestCalculationMethod, PrepaymentAction } from '@/types/loan';
 import { formatCurrency } from '@/lib/formatters';
 
 export const createLoanSchema = z.object({
@@ -24,6 +24,9 @@ export const createLoanSchema = z.object({
   downPayment: z.number().min(0).optional(),
   loanOfficerId: z.string().uuid().optional().or(z.literal('')),
   notes: z.string().max(500).optional(),
+  interestCalculationMethod: z.nativeEnum(InterestCalculationMethod).optional(),
+  earlySettlementRebatePercentage: z.number().min(0).max(1).optional(),
+  prepaymentAction: z.nativeEnum(PrepaymentAction).optional(),
 });
 
 export type CreateLoanFormValues = z.infer<typeof createLoanSchema>;

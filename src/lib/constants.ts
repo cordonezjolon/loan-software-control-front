@@ -1,4 +1,4 @@
-import type { LoanStatus, LoanType, LoanPurpose } from '@/types/loan';
+import type { LoanStatus, LoanType, LoanPurpose, InterestCalculationMethod, PrepaymentAction } from '@/types/loan';
 import type { InstallmentStatus } from '@/types/installment';
 import type { NotificationPriority, NotificationCategory } from '@/types/notification';
 
@@ -94,6 +94,16 @@ export const LOAN_PURPOSE_LABELS: Record<LoanPurpose, string> = {
   medical_expenses: 'Medical Expenses',
   vacation: 'Vacation',
   other: 'Other',
+};
+
+export const INTEREST_CALCULATION_METHOD_LABELS: Record<InterestCalculationMethod, string> = {
+  flat_rate: 'Flat Rate (Add-On)',
+  declining_balance: 'Declining Balance',
+};
+
+export const PREPAYMENT_ACTION_LABELS: Record<PrepaymentAction, string> = {
+  reduce_term: 'Reduce Term (keep installment)',
+  reduce_installment: 'Reduce Installment (keep term)',
 };
 
 export const NOTIFICATION_PRIORITY_CONFIG: Record<

@@ -1,5 +1,15 @@
 import type { LoanInstallment } from './installment';
 
+export enum InterestCalculationMethod {
+  FlatRate = 'flat_rate',
+  DecliningBalance = 'declining_balance',
+}
+
+export enum PrepaymentAction {
+  ReduceTerm = 'reduce_term',
+  ReduceInstallment = 'reduce_installment',
+}
+
 // Inline summary to avoid circular dep with client.ts
 export interface ClientSummary {
   id: string;
@@ -56,6 +66,9 @@ export interface Loan {
   loanType: LoanType;
   loanPurpose: LoanPurpose;
   status: LoanStatus;
+  interestCalculationMethod: InterestCalculationMethod;
+  earlySettlementRebatePercentage?: number;
+  prepaymentAction?: PrepaymentAction;
   riskAdjustment?: number;
   downPayment?: number;
   loanOfficerId?: string;
@@ -93,10 +106,33 @@ export interface CreateLoanDto {
   loanType: LoanType;
   loanPurpose: LoanPurpose;
   startDate: string;
+  interestCalculationMethod?: InterestCalculationMethod;
+  earlySettlementRebatePercentage?: number;
+  prepaymentAction?: PrepaymentAction;
   riskAdjustment?: number;
   downPayment?: number;
   loanOfficerId?: string;
   notes?: string;
+}
+
+export interface ProcessEarlySettlementDto {
+  paymentMethod: string;
+  paymentDate: string;
+  referenceNumber?: string;
+  notes?: string;
+}
+
+export interface EarlySettlementPreviewDto {
+  loanId: string;
+  interestCalculationMethod: InterestCalculationMethod;
+  paidInstallments: number;
+  remainingInstallments: number;
+  remainingPrincipal: number;
+  scheduledRemainingInterest: number;
+  rebatePercentage: number;
+  rebateAmount: number;
+  settlementAmount: number;
+  previewDate: string;
 }
 
 export type UpdateLoanDto = Partial<Omit<CreateLoanDto, 'clientId'>>;

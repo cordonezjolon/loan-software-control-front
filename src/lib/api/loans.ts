@@ -4,6 +4,7 @@ import type {
   CreateLoanDto,
   EarlyPayoffCalculationDto,
   EarlyPayoffResultDto,
+  EarlySettlementPreviewDto,
   Loan,
   LoanBalance,
   LoanCalculationDto,
@@ -14,6 +15,7 @@ import type {
   LoanType,
   PaymentSchedulePreview,
   PaymentSchedulePreviewParams,
+  ProcessEarlySettlementDto,
   UpdateLoanDto,
 } from '@/types/loan';
 
@@ -63,6 +65,12 @@ export const loansApi = {
 
   activate: (id: string): Promise<Loan> =>
     api.post<Loan>(`/loans/${id}/activate`),
+
+  previewEarlySettlement: (id: string): Promise<EarlySettlementPreviewDto> =>
+    api.get<EarlySettlementPreviewDto>(`/loans/${id}/early-settlement/preview`),
+
+  settleEarly: (id: string, dto: ProcessEarlySettlementDto): Promise<Loan> =>
+    api.post<Loan>(`/loans/${id}/early-settlement/settle`, dto),
 };
 
 export const calculationsApi = {

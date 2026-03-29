@@ -7,6 +7,7 @@ import { DataTable } from '@/components/shared/DataTable';
 import { Pagination } from '@/components/shared/Pagination';
 import { InstallmentStatusBadge } from '@/components/installments/InstallmentStatusBadge';
 import { RegisterPaymentModal } from '@/components/installments/RegisterPaymentModal';
+import { RegisterAdvancePaymentModal } from '@/components/installments/RegisterAdvancePaymentModal';
 import { CurrencyDisplay } from '@/components/shared/CurrencyDisplay';
 import { DateDisplay } from '@/components/shared/DateDisplay';
 import { StatsCard } from '@/components/dashboard/StatsCard';
@@ -65,6 +66,7 @@ export default function InstallmentsPage() {
   const [status, setStatus] = useState<InstallmentStatus | ''>('');
   const [page, setPage] = useState(1);
   const [payingInstallment, setPayingInstallment] = useState<LoanInstallment | null>(null);
+  const [advancePaymentInstallment, setAdvancePaymentInstallment] = useState<LoanInstallment | null>(null);
   const [clientId, setClientId] = useState('');
   const [clientLabel, setClientLabel] = useState('');
   const [datePreset, setDatePreset] = useState<DatePreset>(DEFAULT_DATE_PRESET);
@@ -194,7 +196,7 @@ export default function InstallmentsPage() {
     },
     {
       key: 'status',
-      header: 'Status',
+      header: t('pages.loans.status'),
       render: (_: unknown, row: LoanInstallment) => <InstallmentStatusBadge status={row.status} />,
     },
     {
@@ -202,12 +204,22 @@ export default function InstallmentsPage() {
       header: '',
       render: (_: unknown, row: LoanInstallment) =>
         row.status !== InstallmentStatus.Paid ? (
-          <button
-            onClick={() => setPayingInstallment(row)}
-            className="rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90"
-          >
-            {t('actions.pay')}
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setPayingInstallment(row)}
+              className="rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90"
+            >
+              {t('actions.pay')}
+            </button>
+            {row.loan?.id && (
+              <button
+                onClick={() => setAdvancePaymentInstallment(row)}
+                className="rounded-md border border-border px-3 py-1.5 text-xs font-medium text-foreground hover:bg-accent"
+              >
+                {t('actions.advancePay')}
+              </button>
+            )}
+          </div>
         ) : (
           <span className="text-xs text-muted-foreground">{t('status.paid')}</span>
         ),
@@ -370,6 +382,14 @@ export default function InstallmentsPage() {
           installment={payingInstallment}
           open={Boolean(payingInstallment)}
           onClose={() => setPayingInstallment(null)}
+        />
+      )}
+
+      {advancePaymentInstallment && (
+        <RegisterAdvancePaymentModal
+          installment={advancePaymentInstallment}
+          open={Boolean(advancePaymentInstallment)}
+          onClose={() => setAdvancePaymentInstallment(null)}
         />
       )}
     </div>

@@ -2,7 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { loansApi, type LoansQuery } from '@/lib/api/loans';
-import type { CreateLoanDto, UpdateLoanDto } from '@/types/loan';
+import type { CreateLoanDto, ProcessEarlySettlementDto, UpdateLoanDto } from '@/types/loan';
 import { QUERY_STALE_TIME, QUERY_STALE_TIME_STATS } from '@/lib/constants';
 
 export const LOANS_KEY = 'loans';
@@ -99,6 +99,27 @@ export function useDeleteLoan() {
     mutationFn: (id: string) => loansApi.remove(id),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: [LOANS_KEY] });
+    },
+  });
+}
+
+export function useEarlySettlementPreview(loanId: string) {
+  return useQuery({
+    queryKey: [LOANS_KEY, loanId, 'early-settlement-preview'],
+    queryFn: () => loansApi.previewEarlySettlement(loanId),
+    enabled: Boolean(loanId),
+    staleTime: QUERY_STALE_TIME,
+  });
+}
+
+export function useSettleEarly() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, dto }: { id: string; dto: ProcessEarlySettlementDto }) =>
+      loansApi.settleEarly(id, dto),
+    onSuccess: (_, { id }) => {
+      void qc.invalidateQueries({ queryKey: [LOANS_KEY] });
+      void qc.invalidateQueries({ queryKey: [LOANS_KEY, id] });
     },
   });
 }

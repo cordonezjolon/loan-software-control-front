@@ -12,6 +12,12 @@ export enum PaymentStatus {
   Cancelled = 'cancelled',
 }
 
+export enum PaymentType {
+  Installment = 'installment',
+  Prepayment = 'prepayment',
+  Settlement = 'settlement',
+}
+
 export interface LoanPayment {
   id: string;
   amount: number;
@@ -43,6 +49,64 @@ export interface CreatePaymentDto {
   paymentDate: string;
   referenceNumber?: string;
   notes?: string;
+}
+
+export interface CreateAdvancePaymentDto {
+  loanId: string;
+  amount: number;
+  paymentMethod: PaymentMethod;
+  paymentDate: string;
+  referenceNumber?: string;
+  notes?: string;
+}
+
+export interface CreatePrepaymentDto {
+  loanId: string;
+  amount: number;
+  paymentMethod: PaymentMethod;
+  paymentDate: string;
+  prepaymentAction?: string;
+  referenceNumber?: string;
+  notes?: string;
+}
+
+export interface PrepaymentInstallmentDto {
+  installmentNumber: number;
+  principalAmount: number;
+  interestAmount: number;
+  totalAmount: number;
+  remainingBalance: number;
+  dueDate: string;
+}
+
+export interface PrepaymentResultDto {
+  loanId: string;
+  prepaidAmount: number;
+  previousBalance: number;
+  newRemainingBalance: number;
+  prepaymentAction: string;
+  previousRemainingInstallments: number;
+  newRemainingInstallments: number;
+  monthsSaved?: number;
+  newMonthlyPayment?: number;
+  newSchedule: PrepaymentInstallmentDto[];
+}
+
+export interface AdvancePaymentAllocation {
+  installmentId: string;
+  installmentNumber: number;
+  allocatedAmount: number;
+  installmentStatus: string;
+  remainingInstallmentBalance: number;
+}
+
+export interface AdvancePaymentResult {
+  loanId: string;
+  requestedAmount: number;
+  allocatedAmount: number;
+  remainingLoanBalance: number;
+  fullyPaidOff: boolean;
+  allocations: AdvancePaymentAllocation[];
 }
 
 export const PAYMENT_METHOD_LABELS: Record<PaymentMethod, string> = {

@@ -4,8 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { paymentsApi, type PaymentsQuery } from '@/lib/api/payments';
 import { INSTALLMENTS_KEY } from './useInstallments';
 import { QUERY_STALE_TIME } from '@/lib/constants';
-
-export const PAYMENTS_KEY = 'payments';
+import { LOANS_KEY } from './useLoans';export const PAYMENTS_KEY = 'payments';
 
 export function usePayments(params?: PaymentsQuery) {
   return useQuery({
@@ -34,6 +33,20 @@ export function useCreatePayment() {
   });
 }
 
+export function useCreateAdvancePayment() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: paymentsApi.createAdvancePayment,
+    onSuccess: (_, variables) => {
+      void queryClient.invalidateQueries({ queryKey: [PAYMENTS_KEY] });
+      void queryClient.invalidateQueries({ queryKey: [INSTALLMENTS_KEY] });
+      void queryClient.invalidateQueries({ queryKey: [INSTALLMENTS_KEY, 'balance', variables.loanId] });
+      void queryClient.invalidateQueries({ queryKey: [LOANS_KEY] });
+      void queryClient.invalidateQueries({ queryKey: [LOANS_KEY, variables.loanId] });
+    },
+  });
+}
+
 export function useCancelPayment() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -42,6 +55,20 @@ export function useCancelPayment() {
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: [PAYMENTS_KEY] });
       void queryClient.invalidateQueries({ queryKey: [INSTALLMENTS_KEY] });
+    },
+  });
+}
+
+export function useCreatePrepayment() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: paymentsApi.createPrepayment,
+    onSuccess: (_, variables) => {
+      void queryClient.invalidateQueries({ queryKey: [PAYMENTS_KEY] });
+      void queryClient.invalidateQueries({ queryKey: [INSTALLMENTS_KEY] });
+      void queryClient.invalidateQueries({ queryKey: [INSTALLMENTS_KEY, 'balance', variables.loanId] });
+      void queryClient.invalidateQueries({ queryKey: [LOANS_KEY] });
+      void queryClient.invalidateQueries({ queryKey: [LOANS_KEY, variables.loanId] });
     },
   });
 }
