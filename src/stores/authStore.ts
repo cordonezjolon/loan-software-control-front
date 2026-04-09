@@ -9,6 +9,7 @@ interface AuthStore {
   user: UserResponse | null;
   _hydrated: boolean;
   setAuth: (token: string, user: UserResponse) => void;
+  restorePersistedAuth: () => boolean;
   clearAuth: () => void;
   isAuthenticated: () => boolean;
   hasRole: (role: UserRole) => boolean;
@@ -28,6 +29,50 @@ export const useAuthStore = create<AuthStore>()(
           document.cookie = `access_token=${token}; path=/; SameSite=Lax`;
         }
         set({ token, user, _hydrated: true });
+      },
+      restorePersistedAuth: () => {
+        if (typeof window === 'undefined') {
+          return false;
+        }
+
+        const persistedToken = localStorage.getItem('access_token');
+        const persistedStore = localStorage.getItem('auth-storage');
+
+        let persistedUser: UserResponse | null = null;
+        if (persistedStore) {
+          try {
+            const parsed = JSON.parse(persistedStore) as {
+              state?: { user?: UserResponse | null; token?: string | null };
+            };
+            persistedUser = parsed.state?.user ?? null;
+          } catch {
+            persistedUser = null;
+          }
+        }
+
+        const tokenToRestore =
+          persistedToken && persistedToken !== 'undefined'
+            ? persistedToken
+            : (persistedStore
+                ? (() => {
+                    try {
+                      const parsed = JSON.parse(persistedStore) as {
+                        state?: { token?: string | null };
+                      };
+                      return parsed.state?.token ?? null;
+                    } catch {
+                      return null;
+                    }
+                  })()
+                : null);
+
+        if (!tokenToRestore || tokenToRestore === 'undefined') {
+          return false;
+        }
+
+        document.cookie = `access_token=${tokenToRestore}; path=/; SameSite=Lax`;
+        set({ token: tokenToRestore, user: persistedUser, _hydrated: true });
+        return true;
       },
       clearAuth: () => {
         if (typeof window !== 'undefined') {

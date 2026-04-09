@@ -8,6 +8,6 @@ export const authApi = {
   register: (dto: RegisterDto): Promise<JwtAuthResponse> =>
     api.post<JwtAuthResponse>('/auth/register', dto),
 
-  validateToken: (): Promise<{ valid: boolean }> =>
-    api.post<{ valid: boolean }>('/auth/validate-token'),
+  validateToken: (token: string): Promise<{ valid: boolean; user?: JwtAuthResponse['user'] }> =>
+    api.post<{ valid: boolean; user?: JwtAuthResponse['user'] }>('/auth/validate-token', { token }),
 };

@@ -15,6 +15,12 @@ interface ApiOptions extends RequestInit {
   params?: Record<string, unknown>;
 }
 
+function clearBrowserAuthArtifacts(): void {
+  if (typeof window === 'undefined') return;
+  localStorage.removeItem('access_token');
+  document.cookie = 'access_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax';
+}
+
 async function apiFetch<T>(endpoint: string, options: ApiOptions = {}): Promise<T> {
   const { params, ...fetchOptions } = options;
 
@@ -42,10 +48,8 @@ async function apiFetch<T>(endpoint: string, options: ApiOptions = {}): Promise<
   });
 
   if (response.status === 401) {
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('access_token');
-      window.location.href = '/login';
-    }
+    clearBrowserAuthArtifacts();
+    if (typeof window !== 'undefined') window.location.href = '/login';
     throw new ApiError(401, 'Unauthorized');
   }
 

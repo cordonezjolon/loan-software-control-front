@@ -138,7 +138,7 @@ export default function CalculationsPage() {
             </Field>
 
             <Field
-              label={t('forms.loan.interestCalculationMethod')}
+              label={t('pages.loansNew.interestCalculationMethod')}
               id="interestCalculationMethod"
               error={errors.interestCalculationMethod?.message}
             >
