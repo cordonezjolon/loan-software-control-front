@@ -10,13 +10,7 @@ import { createLoanSchema, type CreateLoanFormValues } from '@/lib/schemas/loan.
 import { useCreateLoan } from '@/hooks/useLoans';
 import { useEligibleClients } from '@/hooks/useClients';
 import { LoanType, LoanPurpose, InterestCalculationMethod, PrepaymentAction } from '@/types/loan';
-import {
-  APP_CURRENCY,
-  LOAN_TYPE_LABELS,
-  LOAN_PURPOSE_LABELS,
-  INTEREST_CALCULATION_METHOD_LABELS,
-  PREPAYMENT_ACTION_LABELS,
-} from '@/lib/constants';
+import { APP_CURRENCY } from '@/lib/constants';
 import { useI18n } from '@/lib/i18n/I18nProvider';
 
 const inputCls =
@@ -104,7 +98,7 @@ export default function NewLoanPage() {
             <select id="loanType" {...register('loanType')} className={selectCls}>
               <option value="">{t('pages.loansNew.selectType')}</option>
               {Object.entries(LoanType).map(([, v]) => (
-                <option key={v} value={v}>{LOAN_TYPE_LABELS[v]}</option>
+                <option key={v} value={v}>{t(`loanTypes.${v}`)}</option>
               ))}
             </select>
           </Field>
@@ -112,7 +106,7 @@ export default function NewLoanPage() {
             <select id="loanPurpose" {...register('loanPurpose')} className={selectCls}>
               <option value="">{t('pages.loansNew.selectPurpose')}</option>
               {Object.entries(LoanPurpose).map(([, v]) => (
-                <option key={v} value={v}>{LOAN_PURPOSE_LABELS[v]}</option>
+                <option key={v} value={v}>{t(`loanPurposes.${v}`)}</option>
               ))}
             </select>
           </Field>
@@ -140,6 +134,12 @@ export default function NewLoanPage() {
             />
           </Field>
         </div>
+
+        <p className="-mt-2 text-xs text-muted-foreground">
+          {interestMethod === InterestCalculationMethod.DecliningBalance
+            ? t('pages.loansNew.interestRateHintDeclining')
+            : t('pages.loansNew.interestRateHintFlat')}
+        </p>
 
         <div className="grid grid-cols-2 gap-4">
           <Field label={t('pages.loansNew.termInMonths')} id="termInMonths" error={errors.termInMonths?.message}>
@@ -188,20 +188,21 @@ export default function NewLoanPage() {
         {/* Interest Calculation Method */}
         <div className="border-t border-border pt-4">
           <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-            Interest Calculation
+            {t('pages.loansNew.interestCalculation')}
           </p>
-          <Field label="Interest Calculation Method" id="interestCalculationMethod" error={errors.interestCalculationMethod?.message}>
+          <Field label={t('pages.loansNew.interestCalculationMethod')} id="interestCalculationMethod" error={errors.interestCalculationMethod?.message}>
             <select id="interestCalculationMethod" {...register('interestCalculationMethod')} className={selectCls}>
               {Object.entries(InterestCalculationMethod).map(([, v]) => (
-                <option key={v} value={v}>{INTEREST_CALCULATION_METHOD_LABELS[v]}</option>
+                <option key={v} value={v}>{t(`interestMethods.${v}`)}</option>
               ))}
             </select>
           </Field>
+          <p className="mt-1.5 text-xs text-muted-foreground">{t('pages.loansNew.interestCalculationMethodDesc')}</p>
 
           {interestMethod === InterestCalculationMethod.FlatRate && (
             <div className="mt-3">
               <Field
-                label="Early Settlement Rebate (0 – 100%)"
+                label={t('pages.loansNew.earlySettlementRebate')}
                 id="earlySettlementRebatePercentage"
                 error={errors.earlySettlementRebatePercentage?.message}
               >
@@ -213,26 +214,26 @@ export default function NewLoanPage() {
                   max={1}
                   {...register('earlySettlementRebatePercentage', { valueAsNumber: true })}
                   className={inputCls}
-                  placeholder="e.g. 0.50 for 50% rebate"
+                  placeholder={t('pages.loansNew.earlySettlementRebatePh')}
                 />
               </Field>
               <p className="mt-1 text-xs text-muted-foreground">
-                Fraction of remaining interest refunded on early settlement (e.g. 0.50 = 50% rebate).
+                {t('pages.loansNew.earlySettlementRebateHint')}
               </p>
             </div>
           )}
 
           {interestMethod === InterestCalculationMethod.DecliningBalance && (
             <div className="mt-3">
-              <Field label="Prepayment Action" id="prepaymentAction" error={errors.prepaymentAction?.message}>
+              <Field label={t('pages.loansNew.prepaymentActionLabel')} id="prepaymentAction" error={errors.prepaymentAction?.message}>
                 <select id="prepaymentAction" {...register('prepaymentAction')} className={selectCls}>
                   {Object.entries(PrepaymentAction).map(([, v]) => (
-                    <option key={v} value={v}>{PREPAYMENT_ACTION_LABELS[v]}</option>
+                    <option key={v} value={v}>{t(`prepaymentActions.${v}`)}</option>
                   ))}
                 </select>
               </Field>
               <p className="mt-1 text-xs text-muted-foreground">
-                How the schedule is recalculated after a principal prepayment.
+                {t('pages.loansNew.prepaymentActionHint')}
               </p>
             </div>
           )}

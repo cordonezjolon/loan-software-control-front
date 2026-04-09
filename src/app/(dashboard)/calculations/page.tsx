@@ -20,6 +20,7 @@ import { formatCurrency, formatMonths } from '@/lib/formatters';
 import { APP_CURRENCY } from '@/lib/constants';
 import { useDebounce } from '@/hooks/useDebounce';
 import type { AmortizationEntry } from '@/types/loan';
+import { InterestCalculationMethod } from '@/types/loan';
 import { useI18n } from '@/lib/i18n/I18nProvider';
 
 const inputCls =
@@ -47,21 +48,31 @@ export default function CalculationsPage() {
     formState: { errors },
   } = useForm<LoanCalculationFormValues>({
     resolver: zodResolver(loanCalculationSchema),
-    defaultValues: { principal: 50000, interestRate: 0.05, termInMonths: 60 },
+    defaultValues: {
+      principal: 50000,
+      interestRate: 0.05,
+      termInMonths: 60,
+      interestCalculationMethod: InterestCalculationMethod.DecliningBalance,
+    },
   });
 
   const watchedValues = watch();
   const debouncedValues = useDebounce(watchedValues, 500);
 
   useEffect(() => {
-    const { principal, interestRate, termInMonths } = debouncedValues;
-    if (principal && interestRate && termInMonths) {
+    const { principal, interestRate, termInMonths, interestCalculationMethod } = debouncedValues;
+    if (principal && interestRate && termInMonths && interestCalculationMethod) {
       handleSubmit((data) => {
         calculateMutation.mutate(data);
       })();
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [debouncedValues.principal, debouncedValues.interestRate, debouncedValues.termInMonths]);
+  }, [
+    debouncedValues.principal,
+    debouncedValues.interestRate,
+    debouncedValues.termInMonths,
+    debouncedValues.interestCalculationMethod,
+  ]);
 
   const result = calculateMutation.data;
 
@@ -124,6 +135,17 @@ export default function CalculationsPage() {
                   = {formatMonths(watchedValues.termInMonths)}
                 </p>
               )}
+            </Field>
+
+            <Field
+              label={t('forms.loan.interestCalculationMethod')}
+              id="interestCalculationMethod"
+              error={errors.interestCalculationMethod?.message}
+            >
+              <select id="interestCalculationMethod" {...register('interestCalculationMethod')} className={inputCls}>
+                <option value={InterestCalculationMethod.FlatRate}>{t('interestMethods.flat_rate')}</option>
+                <option value={InterestCalculationMethod.DecliningBalance}>{t('interestMethods.declining_balance')}</option>
+              </select>
             </Field>
 
             <button

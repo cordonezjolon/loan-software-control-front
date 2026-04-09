@@ -141,6 +141,7 @@ export interface LoanCalculationDto {
   principal: number;
   interestRate: number;
   termInMonths: number;
+  interestCalculationMethod?: InterestCalculationMethod;
   loanType?: LoanType;
   downPayment?: number;
   riskAdjustment?: number;

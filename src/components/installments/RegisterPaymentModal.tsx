@@ -6,7 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Loader2, X } from 'lucide-react';
 import { useCreatePayment } from '@/hooks/usePayments';
-import { PaymentMethod, PAYMENT_METHOD_LABELS } from '@/types/payment';
+import { PaymentMethod } from '@/types/payment';
 import type { LoanInstallment } from '@/types/installment';
 import { formatCurrency, formatDate } from '@/lib/formatters';
 import { APP_CURRENCY } from '@/lib/constants';
@@ -165,7 +165,7 @@ export function RegisterPaymentModal({ installment, open, onClose }: RegisterPay
             <select id="paymentMethod" className={inputCls} {...register('paymentMethod')}>
               {Object.values(PaymentMethod).map((method) => (
                 <option key={method} value={method}>
-                  {PAYMENT_METHOD_LABELS[method]}
+                  {t(`paymentMethods.${method}`)}
                 </option>
               ))}
             </select>

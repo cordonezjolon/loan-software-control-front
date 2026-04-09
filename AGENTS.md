@@ -1397,3 +1397,13 @@ npm run build && npm start
 | Payment reminders | POST | `/api/v1/notifications/payment-reminders` |
 | Loan approval notify | POST | `/api/v1/notifications/loan-approval/:loanId` |
 | Notification stats | GET | `/api/v1/notifications/stats/summary` |
+
+---
+
+## Commit and Push Policy
+
+**Do NOT run `git commit` or `git push` (or any variant) unless the user explicitly requests it.**
+
+- Implement changes, run builds/tests/lint, and report status — but hold all git operations until the user says so (e.g. "commit this", "push now", "commit and push").
+- When the user asks for a commit, use a concise single-line `-m` message. Never use multi-line `-m` flags.
+- Never force-push or run destructive git commands without explicit confirmation.

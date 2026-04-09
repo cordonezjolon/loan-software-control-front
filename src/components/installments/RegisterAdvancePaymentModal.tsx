@@ -9,7 +9,6 @@ import { useCreateAdvancePayment } from '@/hooks/usePayments';
 import { useRemainingBalance } from '@/hooks/useInstallments';
 import {
   PaymentMethod,
-  PAYMENT_METHOD_LABELS,
   type AdvancePaymentResult,
   type CreateAdvancePaymentDto,
 } from '@/types/payment';
@@ -185,7 +184,7 @@ export function RegisterAdvancePaymentModal({
               <select id="paymentMethod" className={inputCls} {...register('paymentMethod')}>
                 {Object.values(PaymentMethod).map((method) => (
                   <option key={method} value={method}>
-                    {PAYMENT_METHOD_LABELS[method]}
+                    {t(`paymentMethods.${method}`)}
                   </option>
                 ))}
               </select>

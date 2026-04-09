@@ -103,7 +103,7 @@ export function I18nProvider({ children, initialLocale }: I18nProviderProps) {
   }, [locale]);
 
   return (
-    <NextIntlClientProvider locale={locale} messages={messageCatalog[locale]}>
+    <NextIntlClientProvider locale={locale} messages={messageCatalog[locale]} timeZone="UTC">
       <I18nContextBridge locale={locale} setLocale={setLocale}>
         {children}
       </I18nContextBridge>

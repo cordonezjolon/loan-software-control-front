@@ -1,16 +1,17 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Loader2, X, ShieldCheck, AlertTriangle } from 'lucide-react';
 import { useEarlySettlementPreview, useSettleEarly } from '@/hooks/useLoans';
-import { PaymentMethod, PAYMENT_METHOD_LABELS } from '@/types/payment';
+import { PaymentMethod } from '@/types/payment';
 import { InterestCalculationMethod } from '@/types/loan';
 import { formatCurrency } from '@/lib/formatters';
 import { APP_CURRENCY } from '@/lib/constants';
 import { ApiError } from '@/lib/api/client';
+import { useI18n } from '@/lib/i18n/I18nProvider';
 
 interface EarlySettlementModalProps {
   loanId: string;
@@ -18,14 +19,12 @@ interface EarlySettlementModalProps {
   onClose: () => void;
 }
 
-const settlementSchema = z.object({
-  paymentMethod: z.nativeEnum(PaymentMethod),
-  paymentDate: z.string().min(1, 'Payment date is required'),
-  referenceNumber: z.string().max(100).optional(),
-  notes: z.string().max(500).optional(),
-});
-
-type SettlementFormValues = z.infer<typeof settlementSchema>;
+type SettlementFormValues = {
+  paymentMethod: PaymentMethod;
+  paymentDate: string;
+  referenceNumber?: string;
+  notes?: string;
+};
 
 const inputCls =
   'h-10 w-full rounded-md border border-input bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring';
@@ -67,12 +66,25 @@ export function EarlySettlementModal({ loanId, open, onClose }: EarlySettlementM
   const settleEarly = useSettleEarly();
   const [serverError, setServerError] = useState<string | null>(null);
   const [settled, setSettled] = useState(false);
+  const { t } = useI18n();
+
+  const settlementSchema = useMemo(
+    () =>
+      z.object({
+        paymentMethod: z.nativeEnum(PaymentMethod),
+        paymentDate: z.string().min(1, t('pages.earlySettlement.paymentDateRequired')),
+        referenceNumber: z.string().max(100).optional(),
+        notes: z.string().max(500).optional(),
+      }),
+    [t],
+  );
+
 
   const {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
-  } = useForm<SettlementFormValues>({
+  } = useForm<SettlementFormValues, unknown, SettlementFormValues>({
     resolver: zodResolver(settlementSchema),
     defaultValues: {
       paymentMethod: PaymentMethod.BankTransfer,
@@ -91,7 +103,7 @@ export function EarlySettlementModal({ loanId, open, onClose }: EarlySettlementM
       if (err instanceof ApiError) {
         setServerError(err.message);
       } else {
-        setServerError('Failed to process settlement. Please try again.');
+        setServerError(t('pages.earlySettlement.failed'));
       }
     }
   };
@@ -103,7 +115,7 @@ export function EarlySettlementModal({ loanId, open, onClose }: EarlySettlementM
         <div className="flex items-center justify-between border-b border-border px-5 py-4">
           <div className="flex items-center gap-2">
             <ShieldCheck className="h-5 w-5 text-primary" />
-            <h2 className="text-base font-semibold text-foreground">Early Settlement</h2>
+            <h2 className="text-base font-semibold text-foreground">{t('pages.earlySettlement.title')}</h2>
           </div>
           <button
             onClick={onClose}
@@ -118,15 +130,13 @@ export function EarlySettlementModal({ loanId, open, onClose }: EarlySettlementM
           {settled && (
             <div className="flex flex-col items-center gap-3 py-6 text-center">
               <ShieldCheck className="h-12 w-12 text-green-500" />
-              <p className="text-base font-semibold text-foreground">Loan fully settled!</p>
-              <p className="text-sm text-muted-foreground">
-                The early settlement has been processed successfully.
-              </p>
+              <p className="text-base font-semibold text-foreground">{t('pages.earlySettlement.successTitle')}</p>
+              <p className="text-sm text-muted-foreground">{t('pages.earlySettlement.successBody')}</p>
               <button
                 onClick={onClose}
                 className="mt-2 rounded-md bg-primary px-5 py-2 text-sm font-medium text-white hover:bg-primary/90"
               >
-                Close
+                {t('pages.earlySettlement.close')}
               </button>
             </div>
           )}
@@ -143,24 +153,24 @@ export function EarlySettlementModal({ loanId, open, onClose }: EarlySettlementM
               {preview && (
                 <div className="rounded-lg border border-border bg-muted/30 p-4 space-y-2">
                   <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-3">
-                    Settlement Preview
+                    {t('pages.earlySettlement.preview')}
                   </p>
-                  <SummaryRow label="Method" value={
+                  <SummaryRow label={t('pages.earlySettlement.method')} value={
                     preview.interestCalculationMethod === InterestCalculationMethod.FlatRate
                       ? 'Flat Rate (Add-On)'
                       : 'Declining Balance'
                   } />
-                  <SummaryRow label="Paid installments" value={String(preview.paidInstallments)} />
-                  <SummaryRow label="Remaining installments" value={String(preview.remainingInstallments)} />
-                  <SummaryRow label="Remaining principal" value={formatCurrency(preview.remainingPrincipal, APP_CURRENCY)} />
+                  <SummaryRow label={t('pages.earlySettlement.paidInstallments')} value={String(preview.paidInstallments)} />
+                  <SummaryRow label={t('pages.earlySettlement.remainingInstallments')} value={String(preview.remainingInstallments)} />
+                  <SummaryRow label={t('pages.earlySettlement.remainingPrincipal')} value={formatCurrency(preview.remainingPrincipal, APP_CURRENCY)} />
                   {preview.interestCalculationMethod === InterestCalculationMethod.FlatRate && (
                     <>
-                      <SummaryRow label="Scheduled remaining interest" value={formatCurrency(preview.scheduledRemainingInterest, APP_CURRENCY)} />
-                      <SummaryRow label={`Rebate (${(preview.rebatePercentage * 100).toFixed(0)}%)`} value={`− ${formatCurrency(preview.rebateAmount, APP_CURRENCY)}`} />
+                      <SummaryRow label={t('pages.earlySettlement.scheduledRemainingInterest')} value={formatCurrency(preview.scheduledRemainingInterest, APP_CURRENCY)} />
+                      <SummaryRow label={`${t('pages.earlySettlement.rebate')} (${(preview.rebatePercentage * 100).toFixed(0)}%)`} value={`− ${formatCurrency(preview.rebateAmount, APP_CURRENCY)}`} />
                     </>
                   )}
                   <div className="border-t border-border pt-2 mt-2">
-                    <SummaryRow label="Settlement Amount" value={formatCurrency(preview.settlementAmount, APP_CURRENCY)} highlight />
+                    <SummaryRow label={t('pages.earlySettlement.settlementAmount')} value={formatCurrency(preview.settlementAmount, APP_CURRENCY)} highlight />
                   </div>
                 </div>
               )}
@@ -174,19 +184,19 @@ export function EarlySettlementModal({ loanId, open, onClose }: EarlySettlementM
                   </div>
                 )}
 
-                <Field label="Payment Method" id="paymentMethod" error={errors.paymentMethod?.message}>
+                <Field label={t('pages.earlySettlement.paymentMethod')} id="paymentMethod" error={errors.paymentMethod?.message}>
                   <select id="paymentMethod" {...register('paymentMethod')} className={selectCls}>
                     {Object.entries(PaymentMethod).map(([, v]) => (
-                      <option key={v} value={v}>{PAYMENT_METHOD_LABELS[v]}</option>
+                      <option key={v} value={v}>{t(`paymentMethods.${v}`)}</option>
                     ))}
                   </select>
                 </Field>
 
-                <Field label="Payment Date" id="paymentDate" error={errors.paymentDate?.message}>
+                <Field label={t('pages.earlySettlement.paymentDate')} id="paymentDate" error={errors.paymentDate?.message}>
                   <input type="date" id="paymentDate" {...register('paymentDate')} className={inputCls} />
                 </Field>
 
-                <Field label="Reference Number (optional)" id="referenceNumber" error={errors.referenceNumber?.message}>
+                <Field label={t('pages.earlySettlement.referenceNumber')} id="referenceNumber" error={errors.referenceNumber?.message}>
                   <input
                     type="text"
                     id="referenceNumber"
@@ -196,7 +206,7 @@ export function EarlySettlementModal({ loanId, open, onClose }: EarlySettlementM
                   />
                 </Field>
 
-                <Field label="Notes (optional)" id="notes" error={errors.notes?.message}>
+                <Field label={t('pages.earlySettlement.notes')} id="notes" error={errors.notes?.message}>
                   <textarea
                     id="notes"
                     {...register('notes')}
@@ -212,7 +222,7 @@ export function EarlySettlementModal({ loanId, open, onClose }: EarlySettlementM
                     onClick={onClose}
                     className="rounded-md border border-border px-4 py-2 text-sm font-medium hover:bg-accent"
                   >
-                    Cancel
+                    {t('pages.earlySettlement.cancel')}
                   </button>
                   <button
                     type="submit"
@@ -220,7 +230,7 @@ export function EarlySettlementModal({ loanId, open, onClose }: EarlySettlementM
                     className="flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/90 disabled:opacity-60"
                   >
                     {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
-                    Confirm Settlement
+                    {t('pages.earlySettlement.confirm')}
                   </button>
                 </div>
               </form>

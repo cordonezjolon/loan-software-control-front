@@ -12,7 +12,7 @@ import { ConfirmDialog } from '@/components/shared/ConfirmDialog';
 import { LoanStatusBadge } from '@/components/loans/LoanStatusBadge';
 import { CurrencyDisplay } from '@/components/shared/CurrencyDisplay';
 import { DateDisplay } from '@/components/shared/DateDisplay';
-import { LOAN_TYPE_LABELS, LOAN_STATUS_CONFIG, PAGE_SIZE } from '@/lib/constants';
+import { LOAN_STATUS_CONFIG, PAGE_SIZE } from '@/lib/constants';
 import { ApiError } from '@/lib/api/client';
 import { LoanStatus } from '@/types/loan';
 import type { Loan } from '@/types/loan';
@@ -79,7 +79,7 @@ export default function LoansPage() {
     {
       key: 'loanType',
       header: t('pages.loans.type'),
-      render: (_: unknown, row: Loan) => LOAN_TYPE_LABELS[row.loanType] ?? row.loanType,
+      render: (_: unknown, row: Loan) => t(`loanTypes.${row.loanType}`),
     },
     {
       key: 'principal',

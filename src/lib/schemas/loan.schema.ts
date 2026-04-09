@@ -11,7 +11,7 @@ export const createLoanSchema = z.object({
   interestRate: z
     .number()
     .min(0.001, 'Minimum 0.1%')
-    .max(0.35, 'Maximum 35%'),
+    .max(2, 'Maximum 200%'),
   termInMonths: z
     .number()
     .int()
@@ -42,12 +42,13 @@ export const loanCalculationSchema = z.object({
   interestRate: z
     .number()
     .min(0.001, 'Minimum 0.1%')
-    .max(0.5, 'Maximum 50%'),
+    .max(2, 'Maximum 200%'),
   termInMonths: z
     .number()
     .int()
     .min(1, 'Minimum 1 month')
     .max(480, 'Maximum 480 months'),
+  interestCalculationMethod: z.nativeEnum(InterestCalculationMethod).optional(),
   loanType: z.nativeEnum(LoanType).optional(),
   downPayment: z.number().min(0).optional(),
   riskAdjustment: z.number().min(0).max(0.1).optional(),

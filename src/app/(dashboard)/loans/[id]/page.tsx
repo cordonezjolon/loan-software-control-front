@@ -15,12 +15,15 @@ import { DateDisplay } from '@/components/shared/DateDisplay';
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog';
 import { PageLoader } from '@/components/shared/LoadingSpinner';
 import { LOAN_TYPE_LABELS, LOAN_PURPOSE_LABELS, INTEREST_CALCULATION_METHOD_LABELS } from '@/lib/constants';
+import { formatPercent } from '@/lib/formatters';
 import { ApiError } from '@/lib/api/client';
+import { useI18n } from '@/lib/i18n/I18nProvider';
 import { LoanStatus, InterestCalculationMethod } from '@/types/loan';
 
 export default function LoanDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const { data: loan, isLoading } = useLoan(id);
+  const { t } = useI18n();
   const { data: installments = [] } = useInstallmentsByLoan(id);
   const approveLoan = useApproveLoan();
   const rejectLoan = useRejectLoan();
@@ -61,6 +64,11 @@ export default function LoanDetailPage({ params }: { params: Promise<{ id: strin
     reject: { title: 'Reject Loan', description: 'Reject this loan application?', label: 'Reject', variant: 'danger' as const },
     activate: { title: 'Activate Loan', description: 'Activate this approved loan?', label: 'Activate', variant: 'default' as const },
   };
+
+  const interestRateDisplay =
+    loan.interestCalculationMethod === InterestCalculationMethod.DecliningBalance
+      ? `${formatPercent(loan.interestRate)} (${t('pages.loans.monthlyEquivalent')}: ${formatPercent(loan.interestRate / 12)})`
+      : formatPercent(loan.interestRate);
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
@@ -104,7 +112,7 @@ export default function LoanDetailPage({ params }: { params: Promise<{ id: strin
                 className="flex items-center gap-1.5 rounded-md bg-amber-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-amber-700"
               >
                 <ShieldCheck className="h-3.5 w-3.5" />
-                Early Settlement
+                {t('pages.loans.earlySettlementButton')}
               </button>
             )}
           {loan.status === LoanStatus.Active &&
@@ -114,7 +122,7 @@ export default function LoanDetailPage({ params }: { params: Promise<{ id: strin
                 className="flex items-center gap-1.5 rounded-md border border-primary px-3 py-1.5 text-xs font-medium text-primary hover:bg-primary/10"
               >
                 <TrendingDown className="h-3.5 w-3.5" />
-                Prepayment
+                {t('pages.loans.prepaymentButton')}
               </button>
             )}
         </div>
@@ -144,7 +152,7 @@ export default function LoanDetailPage({ params }: { params: Promise<{ id: strin
           {[
             { label: 'Principal', value: <CurrencyDisplay value={loan.principal} /> },
             { label: 'Monthly Payment', value: <CurrencyDisplay value={loan.monthlyPayment} /> },
-            { label: 'Interest Rate', value: `${(loan.interestRate * 100).toFixed(2)}%` },
+            { label: t('pages.loans.interestRateLabel'), value: interestRateDisplay },
             { label: 'Term', value: `${loan.termInMonths} months` },
             { label: 'Total Interest', value: <CurrencyDisplay value={loan.totalInterest} /> },
             { label: 'Total Amount', value: <CurrencyDisplay value={loan.totalAmount} /> },
@@ -209,11 +217,11 @@ export default function LoanDetailPage({ params }: { params: Promise<{ id: strin
                 { label: 'Created', value: <DateDisplay value={loan.createdAt} withTime /> },
                 { label: 'Updated', value: <DateDisplay value={loan.updatedAt} withTime /> },
                 {
-                  label: 'Interest Method',
+                  label: t('pages.loans.interestMethod'),
                   value: INTEREST_CALCULATION_METHOD_LABELS[loan.interestCalculationMethod] ?? loan.interestCalculationMethod,
                 },
                 ...(loan.earlySettlementRebatePercentage != null
-                  ? [{ label: 'Settlement Rebate', value: `${(loan.earlySettlementRebatePercentage * 100).toFixed(0)}%` }]
+                  ? [{ label: t('pages.loans.settlementRebate'), value: `${(loan.earlySettlementRebatePercentage * 100).toFixed(0)}%` }]
                   : []),
                 ...(loan.riskAdjustment ? [{ label: 'Risk Adjustment', value: `${(loan.riskAdjustment * 100).toFixed(2)}%` }] : []),
                 ...(loan.downPayment ? [{ label: 'Down Payment', value: <CurrencyDisplay value={loan.downPayment} /> }] : []),
