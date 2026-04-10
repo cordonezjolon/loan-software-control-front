@@ -10,7 +10,7 @@ export const createLoanSchema = z.object({
     .max(5_000_000, `Maximum ${formatCurrency(5_000_000)}`),
   interestRate: z
     .number()
-    .min(0.001, 'Minimum 0.1%')
+    .min(0.005, 'Minimum 0.5%')
     .max(2, 'Maximum 200%'),
   termInMonths: z
     .number()

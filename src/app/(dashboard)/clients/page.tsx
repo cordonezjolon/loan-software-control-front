@@ -3,12 +3,13 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Plus } from 'lucide-react';
+import { Pencil, Plus, Trash2 } from 'lucide-react';
 import { useClients, useDeleteClient } from '@/hooks/useClients';
 import { DataTable } from '@/components/shared/DataTable';
 import { ClientSearch } from '@/components/shared/ClientSearch';
 import { Pagination } from '@/components/shared/Pagination';
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog';
+import { TableActionButton } from '@/components/shared/TableActionButton';
 import { formatCurrency } from '@/lib/formatters';
 import { PAGE_SIZE, CREDIT_SCORE_GOOD, CREDIT_SCORE_FAIR } from '@/lib/constants';
 import type { Client } from '@/types/client';
@@ -89,25 +90,29 @@ export default function ClientsPage() {
       header: '',
       render: (_: unknown, row: Client) => (
         <div className="flex items-center gap-2">
-          <button
+          <TableActionButton
             onClick={(e) => {
               e.stopPropagation();
               router.push(`/clients/${row.id}`);
             }}
-            className="text-xs text-primary hover:underline"
+            variant="primary"
+            icon={<Pencil className="h-3.5 w-3.5" aria-hidden="true" />}
+            aria-label={t('actions.edit')}
           >
             {t('actions.edit')}
-          </button>
-          <button
+          </TableActionButton>
+          <TableActionButton
             onClick={(e) => {
               e.stopPropagation();
               setDeleteId(row.id);
               setDeleteError(null);
             }}
-            className="text-xs text-destructive hover:underline"
+            variant="danger"
+            icon={<Trash2 className="h-3.5 w-3.5" aria-hidden="true" />}
+            aria-label={t('actions.delete')}
           >
             {t('actions.delete')}
-          </button>
+          </TableActionButton>
         </div>
       ),
     },

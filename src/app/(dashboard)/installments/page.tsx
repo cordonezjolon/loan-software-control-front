@@ -5,6 +5,7 @@ import { AlertTriangle, DollarSign, Calendar, X } from 'lucide-react';
 import { useInstallments, useInstallmentStatistics } from '@/hooks/useInstallments';
 import { DataTable } from '@/components/shared/DataTable';
 import { Pagination } from '@/components/shared/Pagination';
+import { TableActionButton } from '@/components/shared/TableActionButton';
 import { InstallmentStatusBadge } from '@/components/installments/InstallmentStatusBadge';
 import { RegisterPaymentModal } from '@/components/installments/RegisterPaymentModal';
 import { RegisterAdvancePaymentModal } from '@/components/installments/RegisterAdvancePaymentModal';
@@ -205,19 +206,21 @@ export default function InstallmentsPage() {
       render: (_: unknown, row: LoanInstallment) =>
         row.status !== InstallmentStatus.Paid ? (
           <div className="flex gap-2">
-            <button
+            <TableActionButton
               onClick={() => setPayingInstallment(row)}
-              className="rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90"
+              variant="primary"
+              aria-label={t('actions.pay')}
             >
               {t('actions.pay')}
-            </button>
+            </TableActionButton>
             {row.loan?.id && (
-              <button
+              <TableActionButton
                 onClick={() => setAdvancePaymentInstallment(row)}
-                className="rounded-md border border-border px-3 py-1.5 text-xs font-medium text-foreground hover:bg-accent"
+                variant="neutral"
+                aria-label={t('actions.advancePay')}
               >
                 {t('actions.advancePay')}
-              </button>
+              </TableActionButton>
             )}
           </div>
         ) : (

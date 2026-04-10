@@ -5,6 +5,7 @@ import { DollarSign, CreditCard, CheckCircle2, XCircle, Search, X } from 'lucide
 import { usePayments, useCancelPayment } from '@/hooks/usePayments';
 import { DataTable } from '@/components/shared/DataTable';
 import { Pagination } from '@/components/shared/Pagination';
+import { TableActionButton } from '@/components/shared/TableActionButton';
 import { CurrencyDisplay } from '@/components/shared/CurrencyDisplay';
 import { DateDisplay } from '@/components/shared/DateDisplay';
 import { StatsCard } from '@/components/dashboard/StatsCard';
@@ -243,16 +244,18 @@ export default function PaymentsPage() {
       header: '',
       render: (_: unknown, row: LoanPayment) =>
         row.status === PaymentStatus.Completed || row.status === PaymentStatus.Pending ? (
-          <button
+          <TableActionButton
             onClick={() => {
               if (confirm(t('pages.payments.cancelPaymentConfirm'))) {
                 void cancelPayment.mutate({ id: row.id });
               }
             }}
-            className="rounded-md border border-border px-2.5 py-1 text-xs text-muted-foreground transition-colors hover:border-destructive/50 hover:text-destructive"
+            variant="danger"
+            icon={<XCircle className="h-3.5 w-3.5" aria-hidden="true" />}
+            aria-label={t('actions.cancel')}
           >
             {t('actions.cancel')}
-          </button>
+          </TableActionButton>
         ) : null,
     },
   ];

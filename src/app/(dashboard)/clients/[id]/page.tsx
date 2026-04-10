@@ -9,15 +9,16 @@ import { LoanStatusBadge } from '@/components/loans/LoanStatusBadge';
 import { CurrencyDisplay } from '@/components/shared/CurrencyDisplay';
 import { DateDisplay } from '@/components/shared/DateDisplay';
 import { PageLoader } from '@/components/shared/LoadingSpinner';
-import { LOAN_TYPE_LABELS } from '@/lib/constants';
-import { LoanType, LoanStatus } from '@/types/loan';
+import { useI18n } from '@/lib/i18n/I18nProvider';
+import { LoanStatus } from '@/types/loan';
 
 export default function ClientDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { t } = useI18n();
   const { id } = use(params);
   const { data: client, isLoading } = useClient(id);
 
   if (isLoading) return <PageLoader />;
-  if (!client) return <p className="text-muted-foreground">Client not found.</p>;
+  if (!client) return <p className="text-muted-foreground">{t('pages.clients.clientNotFound')}</p>;
 
   return (
     <div className="mx-auto max-w-4xl space-y-6">
@@ -26,7 +27,7 @@ export default function ClientDetailPage({ params }: { params: Promise<{ id: str
         className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
       >
         <ArrowLeft className="h-4 w-4" />
-        Back to Clients
+        {t('pages.clientsNew.backToClients')}
       </Link>
 
       {/* Header */}
@@ -60,21 +61,21 @@ export default function ClientDetailPage({ params }: { params: Promise<{ id: str
                 : 'rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-500'
             }
           >
-            {client.isActive ? 'Active' : 'Inactive'}
+            {client.isActive ? t('status.active') : t('status.inactive')}
           </span>
         </div>
 
         {/* Financial info */}
         <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-4 border-t border-border pt-5">
           {[
-            { label: 'Credit Score', value: client.creditScore ?? '—', highlight: true },
+            { label: t('pages.clients.creditScore'), value: client.creditScore ?? '—', highlight: true },
             {
-              label: 'Monthly Income',
+              label: t('pages.clients.monthlyIncome'),
               value: client.monthlyIncome ? <CurrencyDisplay value={client.monthlyIncome} /> : '—',
             },
-            { label: 'Employment Years', value: client.employmentYears ?? '—' },
+            { label: t('pages.clientsNew.employmentYears'), value: client.employmentYears ?? '—' },
             {
-              label: 'Debt-to-Income',
+              label: t('pages.clients.debtToIncome'),
               value: client.debtToIncomeRatio
                 ? `${(client.debtToIncomeRatio * 100).toFixed(1)}%`
                 : '—',
@@ -105,24 +106,31 @@ export default function ClientDetailPage({ params }: { params: Promise<{ id: str
         <div className="flex items-center justify-between border-b border-border px-6 py-4">
           <h2 className="text-sm font-semibold text-foreground flex items-center gap-2">
             <CreditCard className="h-4 w-4" />
-            Loans ({client.loans?.length ?? 0})
+            {t('pages.loans.title')} ({client.loans?.length ?? 0})
           </h2>
           <Link
             href={`/loans/new?clientId=${client.id}`}
             className="text-xs font-medium text-primary hover:underline"
           >
-            + New Loan
+            + {t('pages.loans.newLoan')}
           </Link>
         </div>
 
         {!client.loans?.length ? (
-          <p className="px-6 py-8 text-center text-sm text-muted-foreground">No loans yet.</p>
+          <p className="px-6 py-8 text-center text-sm text-muted-foreground">{t('pages.dashboard.noLoansYet')}</p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="bg-muted/30">
                 <tr>
-                  {['Type', 'Principal', 'Rate', 'Term', 'Status', 'Start Date'].map((h) => (
+                  {[
+                    t('pages.loans.type'),
+                    t('pages.loans.principal'),
+                    t('pages.loans.rate'),
+                    t('pages.loans.term'),
+                    t('pages.loans.status'),
+                    t('pages.loans.startDate'),
+                  ].map((h) => (
                     <th
                       key={h}
                       className="px-5 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground"
@@ -137,14 +145,14 @@ export default function ClientDetailPage({ params }: { params: Promise<{ id: str
                   <tr key={loan.id} className="border-t border-border hover:bg-muted/20">
                     <td className="px-5 py-3">
                       <Link href={`/loans/${loan.id}`} className="font-medium text-primary hover:underline">
-                        {LOAN_TYPE_LABELS[loan.loanType as LoanType] ?? loan.loanType}
+                        {t(`loanTypes.${loan.loanType}`)}
                       </Link>
                     </td>
                     <td className="px-5 py-3">
                       <CurrencyDisplay value={loan.principal} />
                     </td>
                     <td className="px-5 py-3">{(loan.interestRate * 100).toFixed(2)}%</td>
-                    <td className="px-5 py-3">{loan.termInMonths}mo</td>
+                    <td className="px-5 py-3">{loan.termInMonths} {t('pages.loans.months')}</td>
                     <td className="px-5 py-3">
                       <LoanStatusBadge status={loan.status as LoanStatus} />
                     </td>
@@ -161,15 +169,15 @@ export default function ClientDetailPage({ params }: { params: Promise<{ id: str
 
       {client.notes && (
         <div className="rounded-xl border border-border bg-card p-5 shadow-card">
-          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">Notes</p>
+          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">{t('pages.loans.notes')}</p>
           <p className="text-sm text-foreground">{client.notes}</p>
         </div>
       )}
 
       <div className="text-xs text-muted-foreground">
-        Created: <DateDisplay value={client.createdAt} withTime />
+        {t('pages.loans.createdAt')}: <DateDisplay value={client.createdAt} withTime />
         {' · '}
-        Updated: <DateDisplay value={client.updatedAt} withTime />
+        {t('pages.loans.updatedAt')}: <DateDisplay value={client.updatedAt} withTime />
       </div>
     </div>
   );

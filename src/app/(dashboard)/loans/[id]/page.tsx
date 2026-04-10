@@ -14,7 +14,6 @@ import { CurrencyDisplay } from '@/components/shared/CurrencyDisplay';
 import { DateDisplay } from '@/components/shared/DateDisplay';
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog';
 import { PageLoader } from '@/components/shared/LoadingSpinner';
-import { LOAN_TYPE_LABELS, LOAN_PURPOSE_LABELS, INTEREST_CALCULATION_METHOD_LABELS } from '@/lib/constants';
 import { formatPercent } from '@/lib/formatters';
 import { ApiError } from '@/lib/api/client';
 import { useI18n } from '@/lib/i18n/I18nProvider';
@@ -36,7 +35,7 @@ export default function LoanDetailPage({ params }: { params: Promise<{ id: strin
   const [showPrepaymentModal, setShowPrepaymentModal] = useState(false);
 
   if (isLoading) return <PageLoader />;
-  if (!loan) return <p className="text-muted-foreground">Loan not found.</p>;
+  if (!loan) return <p className="text-muted-foreground">{t('pages.loans.loanNotFound')}</p>;
 
   const paidAmount = installments
     .filter((i) => i.status === 'paid')
@@ -55,14 +54,29 @@ export default function LoanDetailPage({ params }: { params: Promise<{ id: strin
         setConfirmError(error.message);
         return;
       }
-      setConfirmError('Unable to complete this action. Please try again.');
+      setConfirmError(`${t('common.somethingWentWrong')}. ${t('common.tryAgain')}.`);
     }
   };
 
   const actionConfig = {
-    approve: { title: 'Approve Loan', description: 'Approve this loan application?', label: 'Approve', variant: 'default' as const },
-    reject: { title: 'Reject Loan', description: 'Reject this loan application?', label: 'Reject', variant: 'danger' as const },
-    activate: { title: 'Activate Loan', description: 'Activate this approved loan?', label: 'Activate', variant: 'default' as const },
+    approve: {
+      title: t('pages.loans.approveTitle'),
+      description: t('pages.loans.approveDescription'),
+      label: t('actions.approve'),
+      variant: 'default' as const,
+    },
+    reject: {
+      title: t('pages.loans.rejectTitle'),
+      description: t('pages.loans.rejectDescription'),
+      label: t('actions.reject'),
+      variant: 'danger' as const,
+    },
+    activate: {
+      title: t('pages.loans.activateTitle'),
+      description: t('pages.loans.activateDescription'),
+      label: t('actions.activate'),
+      variant: 'default' as const,
+    },
   };
 
   const interestRateDisplay =
@@ -75,7 +89,7 @@ export default function LoanDetailPage({ params }: { params: Promise<{ id: strin
       <div className="flex items-center justify-between">
         <Link href="/loans" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
           <ArrowLeft className="h-4 w-4" />
-          Back to Loans
+          {t('pages.loansNew.backToLoans')}
         </Link>
         <div className="flex items-center gap-2">
           {loan.status === LoanStatus.Pending && (
@@ -85,14 +99,14 @@ export default function LoanDetailPage({ params }: { params: Promise<{ id: strin
                 className="flex items-center gap-1.5 rounded-md bg-green-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-green-700"
               >
                 <CheckCircle className="h-3.5 w-3.5" />
-                Approve
+                {t('actions.approve')}
               </button>
               <button
                 onClick={() => { setConfirmAction('reject'); setConfirmError(null); }}
                 className="flex items-center gap-1.5 rounded-md border border-destructive px-3 py-1.5 text-xs font-medium text-destructive hover:bg-destructive/10"
               >
                 <XCircle className="h-3.5 w-3.5" />
-                Reject
+                {t('actions.reject')}
               </button>
             </>
           )}
@@ -102,7 +116,7 @@ export default function LoanDetailPage({ params }: { params: Promise<{ id: strin
               className="flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-white hover:bg-primary/90"
             >
               <Zap className="h-3.5 w-3.5" />
-              Activate
+              {t('actions.activate')}
             </button>
           )}
           {loan.status === LoanStatus.Active &&
@@ -134,7 +148,7 @@ export default function LoanDetailPage({ params }: { params: Promise<{ id: strin
           <div>
             <div className="flex items-center gap-3">
               <h1 className="text-xl font-bold text-foreground">
-                {loan.client ? `${loan.client.firstName} ${loan.client.lastName}` : 'Loan'}
+                {loan.client ? `${loan.client.firstName} ${loan.client.lastName}` : t('pages.loans.title')}
               </h1>
               <LoanStatusBadge status={loan.status} />
             </div>
@@ -142,7 +156,7 @@ export default function LoanDetailPage({ params }: { params: Promise<{ id: strin
           </div>
           {loan.client && (
             <Link href={`/clients/${loan.client.id}`} className="text-xs text-primary hover:underline">
-              View Client →
+              {t('pages.loans.viewClient')} →
             </Link>
           )}
         </div>
@@ -150,14 +164,14 @@ export default function LoanDetailPage({ params }: { params: Promise<{ id: strin
         {/* Financial summary */}
         <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
           {[
-            { label: 'Principal', value: <CurrencyDisplay value={loan.principal} /> },
-            { label: 'Monthly Payment', value: <CurrencyDisplay value={loan.monthlyPayment} /> },
+            { label: t('pages.loans.principal'), value: <CurrencyDisplay value={loan.principal} /> },
+            { label: t('pages.calculations.monthlyPayment'), value: <CurrencyDisplay value={loan.monthlyPayment} /> },
             { label: t('pages.loans.interestRateLabel'), value: interestRateDisplay },
-            { label: 'Term', value: `${loan.termInMonths} months` },
-            { label: 'Total Interest', value: <CurrencyDisplay value={loan.totalInterest} /> },
-            { label: 'Total Amount', value: <CurrencyDisplay value={loan.totalAmount} /> },
-            { label: 'Type', value: LOAN_TYPE_LABELS[loan.loanType] ?? loan.loanType },
-            { label: 'Purpose', value: LOAN_PURPOSE_LABELS[loan.loanPurpose] ?? loan.loanPurpose },
+            { label: t('pages.loans.term'), value: `${loan.termInMonths} ${t('pages.loans.months')}` },
+            { label: t('pages.calculations.totalInterest'), value: <CurrencyDisplay value={loan.totalInterest} /> },
+            { label: t('pages.calculations.totalAmount'), value: <CurrencyDisplay value={loan.totalAmount} /> },
+            { label: t('pages.loans.type'), value: t(`loanTypes.${loan.loanType}`) },
+            { label: t('pages.loans.purpose'), value: t(`loanPurposes.${loan.loanPurpose}`) },
           ].map(({ label, value }) => (
             <div key={label}>
               <p className="text-xs text-muted-foreground">{label}</p>
@@ -172,9 +186,9 @@ export default function LoanDetailPage({ params }: { params: Promise<{ id: strin
             <div className="flex items-center justify-between text-xs text-muted-foreground mb-1.5">
               <span className="flex items-center gap-1">
                 <TrendingDown className="h-3.5 w-3.5" />
-                Repayment Progress
+                {t('pages.loans.repaymentProgress')}
               </span>
-              <span>{progressPct.toFixed(1)}% paid</span>
+              <span>{progressPct.toFixed(1)}% {t('status.paid').toLowerCase()}</span>
             </div>
             <div className="h-2 rounded-full bg-muted overflow-hidden">
               <div
@@ -183,8 +197,8 @@ export default function LoanDetailPage({ params }: { params: Promise<{ id: strin
               />
             </div>
             <div className="flex justify-between text-xs text-muted-foreground mt-1">
-              <span><CurrencyDisplay value={paidAmount} /> paid</span>
-              <span><CurrencyDisplay value={loan.totalAmount - paidAmount} /> remaining</span>
+              <span><CurrencyDisplay value={paidAmount} /> {t('status.paid').toLowerCase()}</span>
+              <span><CurrencyDisplay value={loan.totalAmount - paidAmount} /> {t('pages.installments.remaining').toLowerCase()}</span>
             </div>
           </div>
         )}
@@ -203,7 +217,7 @@ export default function LoanDetailPage({ params }: { params: Promise<{ id: strin
                   : 'text-muted-foreground hover:text-foreground'
               }`}
             >
-              {tab === 'schedule' ? 'Amortization Schedule' : 'Details'}
+              {tab === 'schedule' ? t('pages.calculations.amortizationSchedule') : t('common.detail')}
             </button>
           ))}
         </div>
@@ -212,19 +226,19 @@ export default function LoanDetailPage({ params }: { params: Promise<{ id: strin
           <div className="mt-4 rounded-xl border border-border bg-card p-5 shadow-card">
             <dl className="grid grid-cols-2 gap-4 text-sm">
               {[
-                { label: 'Start Date', value: <DateDisplay value={loan.startDate} /> },
-                { label: 'End Date', value: <DateDisplay value={loan.endDate} /> },
-                { label: 'Created', value: <DateDisplay value={loan.createdAt} withTime /> },
-                { label: 'Updated', value: <DateDisplay value={loan.updatedAt} withTime /> },
+                { label: t('pages.loans.startDate'), value: <DateDisplay value={loan.startDate} /> },
+                { label: t('pages.loans.endDate'), value: <DateDisplay value={loan.endDate} /> },
+                { label: t('pages.loans.createdAt'), value: <DateDisplay value={loan.createdAt} withTime /> },
+                { label: t('pages.loans.updatedAt'), value: <DateDisplay value={loan.updatedAt} withTime /> },
                 {
                   label: t('pages.loans.interestMethod'),
-                  value: INTEREST_CALCULATION_METHOD_LABELS[loan.interestCalculationMethod] ?? loan.interestCalculationMethod,
+                  value: t(`interestMethods.${loan.interestCalculationMethod}`),
                 },
                 ...(loan.earlySettlementRebatePercentage != null
                   ? [{ label: t('pages.loans.settlementRebate'), value: `${(loan.earlySettlementRebatePercentage * 100).toFixed(0)}%` }]
                   : []),
-                ...(loan.riskAdjustment ? [{ label: 'Risk Adjustment', value: `${(loan.riskAdjustment * 100).toFixed(2)}%` }] : []),
-                ...(loan.downPayment ? [{ label: 'Down Payment', value: <CurrencyDisplay value={loan.downPayment} /> }] : []),
+                ...(loan.riskAdjustment ? [{ label: t('pages.loans.riskAdjustment'), value: `${(loan.riskAdjustment * 100).toFixed(2)}%` }] : []),
+                ...(loan.downPayment ? [{ label: t('pages.loans.downPayment'), value: <CurrencyDisplay value={loan.downPayment} /> }] : []),
               ].map(({ label, value }) => (
                 <div key={label}>
                   <dt className="text-muted-foreground">{label}</dt>
@@ -234,7 +248,7 @@ export default function LoanDetailPage({ params }: { params: Promise<{ id: strin
             </dl>
             {loan.notes && (
               <div className="mt-4 border-t border-border pt-4">
-                <p className="text-xs uppercase tracking-wide text-muted-foreground mb-1">Notes</p>
+                <p className="text-xs uppercase tracking-wide text-muted-foreground mb-1">{t('pages.loans.notes')}</p>
                 <p className="text-sm text-foreground">{loan.notes}</p>
               </div>
             )}
@@ -246,7 +260,15 @@ export default function LoanDetailPage({ params }: { params: Promise<{ id: strin
             <table className="w-full text-sm">
               <thead className="bg-muted/30">
                 <tr>
-                  {['#', 'Due Date', 'Principal', 'Interest', 'Total', 'Balance', 'Status'].map((h) => (
+                  {[
+                    '#',
+                    t('pages.installments.dueDateCol'),
+                    t('pages.installments.principal'),
+                    t('pages.installments.interest'),
+                    t('pages.installments.total'),
+                    t('pages.calculations.balance'),
+                    t('pages.loans.status'),
+                  ].map((h) => (
                     <th key={h} className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                       {h}
                     </th>
@@ -270,7 +292,7 @@ export default function LoanDetailPage({ params }: { params: Promise<{ id: strin
                 {!installments.length && (
                   <tr>
                     <td colSpan={7} className="py-8 text-center text-muted-foreground">
-                      No installment schedule available.
+                      {t('pages.loans.noInstallmentSchedule')}
                     </td>
                   </tr>
                 )}

@@ -3,12 +3,13 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Plus } from 'lucide-react';
+import { Check, Plus, Play, Trash2, X } from 'lucide-react';
 import { useLoans, useApproveLoan, useRejectLoan, useActivateLoan, useDeleteLoan } from '@/hooks/useLoans';
 import { DataTable } from '@/components/shared/DataTable';
 import { ClientSearch } from '@/components/shared/ClientSearch';
 import { Pagination } from '@/components/shared/Pagination';
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog';
+import { TableActionButton } from '@/components/shared/TableActionButton';
 import { LoanStatusBadge } from '@/components/loans/LoanStatusBadge';
 import { CurrencyDisplay } from '@/components/shared/CurrencyDisplay';
 import { DateDisplay } from '@/components/shared/DateDisplay';
@@ -112,37 +113,45 @@ export default function LoansPage() {
       render: (_: unknown, row: Loan) => (
         <div className="flex items-center gap-2 whitespace-nowrap">
           {row.status === LoanStatus.Pending && (
-            <button
+            <TableActionButton
               onClick={(e) => { e.stopPropagation(); void approveLoan.mutateAsync(row.id); }}
-              className="text-xs font-medium text-green-600 hover:underline disabled:opacity-50"
+              variant="success"
+              icon={<Check className="h-3.5 w-3.5" aria-hidden="true" />}
               disabled={approveLoan.isPending}
+              aria-label={t('actions.approve')}
             >
               {t('actions.approve')}
-            </button>
+            </TableActionButton>
           )}
           {row.status === LoanStatus.Pending && (
-            <button
+            <TableActionButton
               onClick={(e) => { e.stopPropagation(); setRejectId(row.id); }}
-              className="text-xs font-medium text-red-600 hover:underline"
+              variant="danger"
+              icon={<X className="h-3.5 w-3.5" aria-hidden="true" />}
+              aria-label={t('actions.reject')}
             >
               {t('actions.reject')}
-            </button>
+            </TableActionButton>
           )}
           {row.status === LoanStatus.Approved && (
-            <button
+            <TableActionButton
               onClick={(e) => { e.stopPropagation(); void activateLoan.mutateAsync(row.id); }}
-              className="text-xs font-medium text-primary hover:underline disabled:opacity-50"
+              variant="primary"
+              icon={<Play className="h-3.5 w-3.5" aria-hidden="true" />}
               disabled={activateLoan.isPending}
+              aria-label={t('actions.activate')}
             >
               {t('actions.activate')}
-            </button>
+            </TableActionButton>
           )}
-          <button
+          <TableActionButton
             onClick={(e) => { e.stopPropagation(); setDeleteId(row.id); setDeleteError(null); }}
-            className="text-xs font-medium text-destructive hover:underline"
+            variant="danger"
+            icon={<Trash2 className="h-3.5 w-3.5" aria-hidden="true" />}
+            aria-label={t('actions.delete')}
           >
             {t('actions.delete')}
-          </button>
+          </TableActionButton>
         </div>
       ),
     },
