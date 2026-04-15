@@ -131,6 +131,7 @@ export interface EarlySettlementPreviewDto {
   scheduledRemainingInterest: number;
   rebatePercentage: number;
   rebateAmount: number;
+  currentPeriodInterest: number;
   settlementAmount: number;
   previewDate: string;
 }

@@ -6,7 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Loader2, X, TrendingDown, AlertTriangle } from 'lucide-react';
 import { useCreatePrepayment } from '@/hooks/usePayments';
-import { useRemainingBalance } from '@/hooks/useInstallments';
+import { useLoanBalance } from '@/hooks/useLoans';
 import { PaymentMethod, type PrepaymentResultDto } from '@/types/payment';
 import { PrepaymentAction, type Loan } from '@/types/loan';
 import { formatCurrency } from '@/lib/formatters';
@@ -118,11 +118,11 @@ function ResultSummary({ result }: { result: PrepaymentResultDto }) {
 
 export function PrepaymentModal({ loan, open, onClose }: PrepaymentModalProps) {
   const createPrepayment = useCreatePrepayment();
-  const { data: balanceData } = useRemainingBalance(loan.id);
+  const { data: balanceData } = useLoanBalance(loan.id);
   const [serverError, setServerError] = useState<string | null>(null);
   const [result, setResult] = useState<PrepaymentResultDto | null>(null);
 
-  const remainingBalance = balanceData?.remainingBalance ?? 0;
+  const remainingBalance = balanceData?.currentBalance ?? 0;
   const { t } = useI18n();
 
 

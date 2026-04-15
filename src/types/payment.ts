@@ -20,9 +20,11 @@ export enum PaymentType {
 
 export interface LoanPayment {
   id: string;
+  loanId?: string;
   amount: number;
   paymentMethod: PaymentMethod;
   status: PaymentStatus;
+  paymentType: PaymentType;
   paymentDate: string;
   referenceNumber?: string;
   notes?: string;

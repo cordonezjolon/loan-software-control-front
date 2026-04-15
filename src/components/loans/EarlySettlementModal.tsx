@@ -169,6 +169,12 @@ export function EarlySettlementModal({ loanId, open, onClose }: EarlySettlementM
                       <SummaryRow label={`${t('pages.earlySettlement.rebate')} (${(preview.rebatePercentage * 100).toFixed(0)}%)`} value={`− ${formatCurrency(preview.rebateAmount, APP_CURRENCY)}`} />
                     </>
                   )}
+                  {preview.interestCalculationMethod === InterestCalculationMethod.DecliningBalance && (
+                    <SummaryRow
+                      label={t('pages.earlySettlement.currentPeriodInterest')}
+                      value={formatCurrency(preview.currentPeriodInterest, APP_CURRENCY)}
+                    />
+                  )}
                   <div className="border-t border-border pt-2 mt-2">
                     <SummaryRow label={t('pages.earlySettlement.settlementAmount')} value={formatCurrency(preview.settlementAmount, APP_CURRENCY)} highlight />
                   </div>

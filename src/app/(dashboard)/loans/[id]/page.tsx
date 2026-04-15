@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { ArrowLeft, CheckCircle, XCircle, Zap, TrendingDown, ShieldCheck } from 'lucide-react';
 import { useLoan, useApproveLoan, useRejectLoan, useActivateLoan } from '@/hooks/useLoans';
 import { useInstallmentsByLoan } from '@/hooks/useInstallments';
+import { usePayments } from '@/hooks/usePayments';
 import { LoanStatusBadge } from '@/components/loans/LoanStatusBadge';
 import { InstallmentStatusBadge } from '@/components/installments/InstallmentStatusBadge';
 import { EarlySettlementModal } from '@/components/loans/EarlySettlementModal';
@@ -18,29 +19,31 @@ import { formatPercent } from '@/lib/formatters';
 import { ApiError } from '@/lib/api/client';
 import { useI18n } from '@/lib/i18n/I18nProvider';
 import { LoanStatus, InterestCalculationMethod } from '@/types/loan';
+import { PaymentMethod, PaymentStatus, PaymentType, type LoanPayment } from '@/types/payment';
 
 export default function LoanDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const { data: loan, isLoading } = useLoan(id);
   const { t } = useI18n();
   const { data: installments = [] } = useInstallmentsByLoan(id);
+  const { data: paymentsResponse } = usePayments({ loanId: id, limit: 500, status: PaymentStatus.Completed });
   const approveLoan = useApproveLoan();
   const rejectLoan = useRejectLoan();
   const activateLoan = useActivateLoan();
 
   const [confirmAction, setConfirmAction] = useState<'approve' | 'reject' | 'activate' | null>(null);
   const [confirmError, setConfirmError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'details' | 'schedule'>('details');
+  const [activeTab, setActiveTab] = useState<'details' | 'schedule' | 'payments'>('details');
   const [showSettlementModal, setShowSettlementModal] = useState(false);
   const [showPrepaymentModal, setShowPrepaymentModal] = useState(false);
 
   if (isLoading) return <PageLoader />;
   if (!loan) return <p className="text-muted-foreground">{t('pages.loans.loanNotFound')}</p>;
 
-  const paidAmount = installments
-    .filter((i) => i.status === 'paid')
-    .reduce((acc, i) => acc + Number(i.totalAmount), 0);
-  const progressPct = loan.totalAmount > 0 ? Math.min((paidAmount / loan.totalAmount) * 100, 100) : 0;
+  const payments = paymentsResponse?.data ?? [];
+  const paidAmount = payments.reduce((acc, payment) => acc + Number(payment.amount), 0);
+  const remainingAmount = Math.max(Number(loan.totalAmount) - paidAmount, 0);
+  const progressPct = loan.totalAmount > 0 ? Math.min((paidAmount / Number(loan.totalAmount)) * 100, 100) : 0;
 
   const handleAction = async () => {
     try {
@@ -84,6 +87,19 @@ export default function LoanDetailPage({ params }: { params: Promise<{ id: strin
       ? `${formatPercent(loan.interestRate)} (${t('pages.loans.monthlyEquivalent')}: ${formatPercent(loan.interestRate / 12)})`
       : formatPercent(loan.interestRate);
 
+  const paymentTypeLabels: Record<PaymentType, string> = {
+    [PaymentType.Installment]: 'Installment',
+    [PaymentType.Prepayment]: 'Prepayment',
+    [PaymentType.Settlement]: 'Settlement',
+  };
+
+  const paymentMethodLabels: Record<PaymentMethod, string> = {
+    [PaymentMethod.Cash]: t('paymentMethods.cash'),
+    [PaymentMethod.BankTransfer]: t('paymentMethods.bank_transfer'),
+    [PaymentMethod.CreditCard]: t('paymentMethods.credit_card'),
+    [PaymentMethod.Check]: t('paymentMethods.check'),
+  };
+
   return (
     <div className="mx-auto max-w-5xl space-y-6">
       <div className="flex items-center justify-between">
@@ -119,16 +135,15 @@ export default function LoanDetailPage({ params }: { params: Promise<{ id: strin
               {t('actions.activate')}
             </button>
           )}
-          {loan.status === LoanStatus.Active &&
-            loan.interestCalculationMethod === InterestCalculationMethod.FlatRate && (
-              <button
-                onClick={() => setShowSettlementModal(true)}
-                className="flex items-center gap-1.5 rounded-md bg-amber-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-amber-700"
-              >
-                <ShieldCheck className="h-3.5 w-3.5" />
-                {t('pages.loans.earlySettlementButton')}
-              </button>
-            )}
+          {loan.status === LoanStatus.Active && (
+            <button
+              onClick={() => setShowSettlementModal(true)}
+              className="flex items-center gap-1.5 rounded-md bg-amber-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-amber-700"
+            >
+              <ShieldCheck className="h-3.5 w-3.5" />
+              {t('pages.loans.earlySettlementButton')}
+            </button>
+          )}
           {loan.status === LoanStatus.Active &&
             loan.interestCalculationMethod === InterestCalculationMethod.DecliningBalance && (
               <button
@@ -198,7 +213,7 @@ export default function LoanDetailPage({ params }: { params: Promise<{ id: strin
             </div>
             <div className="flex justify-between text-xs text-muted-foreground mt-1">
               <span><CurrencyDisplay value={paidAmount} /> {t('status.paid').toLowerCase()}</span>
-              <span><CurrencyDisplay value={loan.totalAmount - paidAmount} /> {t('pages.installments.remaining').toLowerCase()}</span>
+              <span><CurrencyDisplay value={remainingAmount} /> {t('pages.installments.remaining').toLowerCase()}</span>
             </div>
           </div>
         )}
@@ -207,7 +222,7 @@ export default function LoanDetailPage({ params }: { params: Promise<{ id: strin
       {/* Tabs */}
       <div>
         <div className="flex border-b border-border">
-          {(['details', 'schedule'] as const).map((tab) => (
+          {(['details', 'schedule', 'payments'] as const).map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -217,7 +232,11 @@ export default function LoanDetailPage({ params }: { params: Promise<{ id: strin
                   : 'text-muted-foreground hover:text-foreground'
               }`}
             >
-              {tab === 'schedule' ? t('pages.calculations.amortizationSchedule') : t('common.detail')}
+              {tab === 'schedule'
+                ? t('pages.calculations.amortizationSchedule')
+                : tab === 'payments'
+                  ? t('pages.payments.title')
+                  : t('common.detail')}
             </button>
           ))}
         </div>
@@ -293,6 +312,53 @@ export default function LoanDetailPage({ params }: { params: Promise<{ id: strin
                   <tr>
                     <td colSpan={7} className="py-8 text-center text-muted-foreground">
                       {t('pages.loans.noInstallmentSchedule')}
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {activeTab === 'payments' && (
+          <div className="mt-4 overflow-x-auto rounded-xl border border-border bg-card shadow-card">
+            <table className="w-full text-sm">
+              <thead className="bg-muted/30">
+                <tr>
+                  {[
+                    t('pages.payments.date'),
+                    t('pages.payments.amount'),
+                    t('pages.payments.method'),
+                    t('pages.payments.reference'),
+                    t('pages.payments.installmentNumber'),
+                    t('pages.payments.status'),
+                  ].map((h) => (
+                    <th key={h} className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {payments.map((payment: LoanPayment) => (
+                  <tr key={payment.id} className="border-t border-border hover:bg-muted/20">
+                    <td className="px-4 py-2.5">
+                      <div className="flex flex-col">
+                        <DateDisplay value={payment.paymentDate} />
+                        <span className="text-xs text-muted-foreground">{paymentTypeLabels[payment.paymentType]}</span>
+                      </div>
+                    </td>
+                    <td className="px-4 py-2.5 font-medium"><CurrencyDisplay value={payment.amount} /></td>
+                    <td className="px-4 py-2.5">{paymentMethodLabels[payment.paymentMethod]}</td>
+                    <td className="px-4 py-2.5 font-mono text-xs text-muted-foreground">{payment.referenceNumber ?? '—'}</td>
+                    <td className="px-4 py-2.5 text-muted-foreground">{payment.installment?.installmentNumber ?? '—'}</td>
+                    <td className="px-4 py-2.5">{payment.status}</td>
+                  </tr>
+                ))}
+                {!payments.length && (
+                  <tr>
+                    <td colSpan={6} className="py-8 text-center text-muted-foreground">
+                      {t('pages.payments.noPayments')}
                     </td>
                   </tr>
                 )}
